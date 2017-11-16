@@ -63,16 +63,21 @@ for m, n in matches3:
 nimg1 = cv2.drawMatchesKnn(img1, kp1, img2, kp2, good1, None, flags=2)
 nimg2 = cv2.drawMatchesKnn(img1, kp3, img2, kp4, good2, None, flags=2)
 nimg3 = cv2.drawMatchesKnn(img1, kp5, img2, kp6, good2, None, flags=2)
-# 画像表示
+# 文字入力
+nimg1 = cv2.putText(nimg1,"AKAZE",(50,50),cv2.FONT_HERSHEY_COMPLEX,1.5,(255,0,0))
+nimg2 = cv2.putText(nimg2,"SURF",(50,50),cv2.FONT_HERSHEY_COMPLEX,1.5,(255,0,0))
+nimg3 = cv2.putText(nimg3,"SIFT",(50,50),cv2.FONT_HERSHEY_COMPLEX,1.5,(255,0,0))
+
+#仮の画像を作成
 z = np.zeros_like(nimg3)
 
+#画像をマージ
 both1=np.hstack((nimg1,nimg2))
 both2=np.hstack((nimg3,z))
-both = np.vstack((both1,both2))
-orgWidth, orgHeight = both.shape[:2]
-size = (orgHeight*2/3, orgWidth*2/3)
-both2 = cv2.resize(both, size)
-cv2.imshow('img', both2)
+both3 = np.vstack((both1,both2))
+orgWidth, orgHeight = int(both3.shape[0]*2/3),int(both3.shape[1]*2/3)
+both4=cv2.resize(both3,(orgHeight,orgWidth))
+cv2.imshow('img', both4)
 
 # キー押下で終了
 cv2.waitKey(0)
