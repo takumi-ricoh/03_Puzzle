@@ -10,6 +10,7 @@ import scipy.ndimage as nd
 from sklearn.svm import SVC
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 #%%ファイルリスト
 #現在 
@@ -56,4 +57,5 @@ clf.fit(data_array,label.T)
 #%%とりあえず試す
 predict_result=clf.predict(data_array)
 
-res = np.array([list(label[0]),list(predict_result)]).T
+result = np.array([list(label[0]),list(predict_result)]).T
+result = pd.DataFrame(result,columns=["answer","predict"])
