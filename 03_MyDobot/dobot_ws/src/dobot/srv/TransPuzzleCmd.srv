@@ -1,0 +1,7 @@
+float32 src_x
+float32 src_y
+float32 dst_x
+float32 dst_y
+---
+int32 result
+
