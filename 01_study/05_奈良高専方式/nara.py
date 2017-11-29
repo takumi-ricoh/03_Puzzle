@@ -87,7 +87,7 @@ g_table = pd.DataFrame(g_table,columns=["deg","cn","ca","X","Y","G"])
 g_table2 = g_table.sort_values(by=["G"],ascending=False)
 
 #%%描画
-"""
+#"""
 fig1 = plt.figure(1)
 
 #fig1
@@ -122,7 +122,7 @@ plt.grid(True)
 plt.title("ca")
 for k, v in g_table.iterrows():
     ax4.annotate(v["ca"],xy=(v["X"],v["Y"]),size=7)
-"""
+#"""
 
 fig2 = plt.figure(2)
 ax = fig2.add_subplot()
