@@ -17,12 +17,14 @@ def calc_deg2(contour):
     #画素間の差分を計算
     diff = np.diff(contour,axis=0)    
     #画素間の角度計算
-    atan = np.rad2deg(np.arctan2(diff[:,0],diff[:,1]))
-    return atan
+    atan = np.rad2deg(np.arctan2(diff[:,1],diff[:,0]))
+    #360°に変換
+    atan[atan<0] = atan[atan<0] + 360
+    return np.int16(atan)
 
 #%%局所方向符号
 def freeman(deg):
-    cn = deg//(-45) + 4
+    cn = deg//45
     return cn
 
 #%%局所曲率符号
@@ -45,7 +47,7 @@ def calc_ca(cn):
 def g_operation(ca,M):
     G=[]
     add = 100
-    #最初と最後の画像のつなぎを計算するため、一旦前後に10個ずつ加える
+    #最初と最後の画像のつなぎを計算するため、一旦前後にadd個ずつ加える
     ca2 = np.r_[ca[-add:],ca,ca[:add]]
     for idx,i in enumerate(ca):
         idx = idx + add
@@ -54,7 +56,7 @@ def g_operation(ca,M):
             ca_minus = ca2[idx - k]
             ca_plus  = ca2[idx + k]
             gsum = gsum + (M-k)*(ca_minus + ca_plus)
-        G.append(gsum)
+        G.append(M*ca2[idx] + gsum)
     return np.array(G)
 
 #%%画像を読んで2値化
@@ -74,27 +76,62 @@ cn = freeman(deg)
 ca = calc_ca(cn)
 
 #%%Gオペレーション
-g = g_operation(ca,M=30)
+g = g_operation(ca,M=10)
+g_abs = np.abs(g) #Gは絶対値だと思うので絶対値に直す。
 
 #%%まとめる
-g_table = np.c_[cn,ca,contour,g]
-g_table = pd.DataFrame(g_table,columns=["ca","cn","X","Y","G"])
+g_table = np.c_[deg,cn,ca,contour,g_abs]
+g_table = pd.DataFrame(g_table,columns=["deg","cn","ca","X","Y","G"])
+
+#%%Ｇが大きくなるようにソート
+g_table2 = g_table.sort_values(by=["G"],ascending=False)
 
 #%%描画
-fig = plt.figure()
+"""
+fig1 = plt.figure(1)
+
 #fig1
-ax1 = fig.add_subplot(221)
-g_table.plot(x="X",y="Y",kind="scatter",c="cn",ax=ax1)
+ax1 = fig1.add_subplot(221)
+g_table.plot.line(x="X",y="Y",style="-o",ax=ax1)
+plt.grid(True)
+plt.title("coordinate")
+for k, v in g_table.iterrows():
+    comment = str(v["X"])+"/"+str(v["Y"])
+    ax1.annotate(comment,xy=(v["X"],v["Y"]),size=7)
+
+#fig2
+ax2 = fig1.add_subplot(222)
+g_table.plot.line(x="X",y="Y",style="-o",ax=ax2)
+plt.grid(True)
+plt.title("deg")
+for k, v in g_table.iterrows():
+    ax2.annotate(v["deg"],xy=(v["X"],v["Y"]),size=7)
+
+#fig3
+ax3 = fig1.add_subplot(223)
+g_table.plot.line(x="X",y="Y",style="-o",ax=ax3)
 plt.grid(True)
 plt.title("cn")
-#fig2
-ax1 = fig.add_subplot(222)
-g_table.plot(x="X",y="Y",kind="scatter",c="ca",ax=ax1)
+for k, v in g_table.iterrows():
+    ax3.annotate(v["cn"],xy=(v["X"],v["Y"]),size=7)
+
+#fig4
+ax4 = fig1.add_subplot(224)
+g_table.plot.line(x="X",y="Y",style="-o",ax=ax4)
 plt.grid(True)
 plt.title("ca")
-#fig3
-ax1 = fig.add_subplot(223)
-g_table.plot(x="X",y="Y",kind="scatter",c="G",ax=ax1)
+for k, v in g_table.iterrows():
+    ax4.annotate(v["ca"],xy=(v["X"],v["Y"]),size=7)
+"""
+
+fig2 = plt.figure(2)
+ax = fig2.add_subplot()
+plt.scatter(g_table["X"],g_table["Y"],c=g_table["G"],cmap="gray",alpha=0.4)
+plt.scatter(g_table2[:4]["X"],g_table2[:4]["Y"],marker="+",c="red",s=200)
+
+#
+#g_table.plot(x="X",y="Y",kind="scatter",c="G",ax=ax)
+#g_table2[:4].plot(x="X",y="Y",kind="scatter",c="red",ax=ax)
 plt.grid(True)
 plt.title("G")
 
