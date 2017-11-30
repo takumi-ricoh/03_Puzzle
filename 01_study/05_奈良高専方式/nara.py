@@ -66,35 +66,16 @@ def g_operation(ca,M): #何個平均化するか(M)を引数
         G.append(M*ca2[idx] + gsum)
     return np.array(G)
 
-#%%おまけ：コーナー検出
-def harris(grayimg,img):
-    
-    dst = cv2.cornerHarris(grayimg,2,3,0.04)
-    #result is dilated for marking the corners, not important
-    dst = cv2.dilate(dst,None)
-    # Threshold for an optimal value, it may vary depending on the image.
-    img = img.copy()
-    img[dst>0.5*dst.max()]=[0,0,255]
-    return img
-
-def shitomasi(grayimg,img):
-    corners = cv2.goodFeaturesToTrack(grayimg,20,0.3,40)
-    corners = np.int0(corners)
-    for i in corners:
-        x,y = i.ravel()
-        cv2.circle(img,(x,y),3,255,-1)
-    return img
-
 """
 以下実行部分
 """
 #%%画像を読んで2値化
-img1  = cv2.imread("01.bmp")
+img1  = cv2.imread("05.bmp")
 img2 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-ret,img3 = cv2.threshold(img2, 160, 255, cv2.THRESH_BINARY)
+ret,img3 = cv2.threshold(img2, 120, 255, cv2.THRESH_BINARY)
 
 #%%モルフォロジー変換？によるノイズ除去
-kernel = np.ones((2,2),np.uint8)
+kernel = np.ones((1,1),np.uint8)
 img4 = cv2.morphologyEx(img3, cv2.MORPH_OPEN, kernel)
 
 #%%輪郭画素抽出
@@ -119,7 +100,45 @@ g_table = pd.DataFrame(g_table,columns=["deg","cn","ca","X","Y","G"])
 #%%Gが大きいもの4点をピックアップする。
 #やり方はいろいろあるが、一旦Gでソートしてから4個抽出
 g_table2 = g_table.sort_values(by=["G"],ascending=False)
-g_table2 = g_table2[:4]
+g_table2 = g_table2[:10] #上位10個
+
+#距離の離れた4点を取りたい。k-meansで4つのクラスタにうまく分かれるか、確認
+from sklearn.cluster import KMeans
+data = g_table2[["X","Y"]]
+pred =  KMeans(n_clusters=4).fit_predict(data)
+g_table2["pred"] = pred
+cluster1 = g_table2[g_table2["pred"]==0]
+cluster2 = g_table2[g_table2["pred"]==1]
+cluster3 = g_table2[g_table2["pred"]==2]
+cluster4 = g_table2[g_table2["pred"]==3]
+
+#%%全く異なる方法
+#画像4点から最も近い4箇所をピックアップする
+contour2 = contour.copy() #輪郭座標
+
+#距離の計算
+len1 = np.linalg.norm(contour2 - [0,0] ,axis=1)
+len2 = np.linalg.norm(contour2 - [250,0] ,axis=1)
+len3 = np.linalg.norm(contour2 - [0,250]   ,axis=1)
+len4 = np.linalg.norm(contour2 - [250,250] ,axis=1)
+
+#中央付近の座標を除去
+a=((125-30)>contour2[:,0]) | ((125+30)<contour2[:,0])
+b=((125-30)>contour2[:,1]) | ((125+30)<contour2[:,1])
+len1 = len1[a & b]
+len2 = len2[a & b]
+len3 = len3[a & b]
+len4 = len4[a & b]
+contour3 = contour2[a & b]
+
+#距離が最大となるインデックスを抽出
+lenind1=np.argmax(len1)
+lenind2=np.argmax(len2)
+lenind3=np.argmax(len3)
+lenind4=np.argmax(len4)
+
+#上記インデックスのデータを抽出
+contour3=contour3[[lenind1,lenind2,lenind3,lenind4],:]
 
 #%%描画1(計算過程：データフレームのplot機能を利用)
 """
@@ -163,22 +182,37 @@ plt.tight_layout()
 
 #%%描画2(Gオペレーション結果：matplotlibで描画)
 fig2 = plt.figure(3)
+
 plt.subplot(231)
 plt.imshow(img1)
 plt.title("raw")
+
 plt.subplot(232)
 plt.imshow(img2)
 plt.title("gray")
+
 plt.subplot(233)
 plt.imshow(img3)
 plt.title("binary")
+
 plt.subplot(234)
 plt.imshow(img4)
 plt.title("denoise")
+
 plt.subplot(235)
 plt.imshow(img4)
 plt.scatter(g_table["X"],g_table["Y"],c=g_table["G"],cmap="gray",alpha=1)
-plt.scatter(g_table2["X"],g_table2["Y"],marker="+",c="red",s=200)
+#plt.scatter(g_table2["X"],g_table2["Y"],marker="+",c="red",s=200)
+plt.scatter(cluster1["X"],cluster1["Y"],marker="+",c="red",s=100)
+plt.scatter(cluster2["X"],cluster2["Y"],marker="+",c="blue",s=100)
+plt.scatter(cluster3["X"],cluster3["Y"],marker="+",c="yellow",s=100)
+plt.scatter(cluster4["X"],cluster4["Y"],marker="+",c="green",s=100)
 plt.grid(True) #グラフへのグリッド追加
-plt.title("G") #グラフへのタイトル追加
+plt.title("G_n=10") #グラフへのタイトル追加
+
+plt.subplot(236)
+plt.imshow(img4)
+plt.scatter(contour3[:,0],contour3[:,1],marker="+",c="red",s=200)
+
 plt.tight_layout() #グラフのレイアウト調整
+
