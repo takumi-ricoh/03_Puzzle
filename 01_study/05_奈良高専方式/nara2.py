@@ -75,3 +75,4 @@ for i in range(24):
     x = corner_list[i][:,0]
     y = corner_list[i][:,1]
     plt.scatter(x,y,marker="+",c="red",s=50)
+plt.subplots_adjust(wspace=0, hspace=0.1)
