@@ -66,16 +66,39 @@ def g_operation(ca,M): #何個平均化するか(M)を引数
         G.append(M*ca2[idx] + gsum)
     return np.array(G)
 
+#%%おまけ：コーナー検出
+def harris(grayimg,img):
+    
+    dst = cv2.cornerHarris(grayimg,2,3,0.04)
+    #result is dilated for marking the corners, not important
+    dst = cv2.dilate(dst,None)
+    # Threshold for an optimal value, it may vary depending on the image.
+    img = img.copy()
+    img[dst>0.5*dst.max()]=[0,0,255]
+    return img
+
+def shitomasi(grayimg,img):
+    corners = cv2.goodFeaturesToTrack(grayimg,20,0.3,40)
+    corners = np.int0(corners)
+    for i in corners:
+        x,y = i.ravel()
+        cv2.circle(img,(x,y),3,255,-1)
+    return img
+
 """
 以下実行部分
 """
 #%%画像を読んで2値化
 img1  = cv2.imread("01.bmp")
 img2 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-ret,img3 = cv2.threshold(img2, 0, 255, cv2.THRESH_BINARY) 
+ret,img3 = cv2.threshold(img2, 160, 255, cv2.THRESH_BINARY)
+
+#%%モルフォロジー変換？によるノイズ除去
+kernel = np.ones((2,2),np.uint8)
+img4 = cv2.morphologyEx(img3, cv2.MORPH_OPEN, kernel)
 
 #%%輪郭画素抽出
-_, contours, hierarchy = cv2.findContours(img3, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+_, contours, hierarchy = cv2.findContours(img4, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
 contour = contours[0][:,0,:]
 
 #%%局所方向符号
@@ -136,14 +159,26 @@ for k, v in g_table.iterrows():
     ax4.annotate(v["ca"],xy=(v["X"],v["Y"]),size=7)
 
 plt.tight_layout()
-
 """
+
 #%%描画2(Gオペレーション結果：matplotlibで描画)
-fig2 = plt.figure(2)
-ax = fig2.add_subplot()
+fig2 = plt.figure(3)
+plt.subplot(231)
+plt.imshow(img1)
+plt.title("raw")
+plt.subplot(232)
+plt.imshow(img2)
+plt.title("gray")
+plt.subplot(233)
+plt.imshow(img3)
+plt.title("binary")
+plt.subplot(234)
+plt.imshow(img4)
+plt.title("denoise")
+plt.subplot(235)
+plt.imshow(img4)
 plt.scatter(g_table["X"],g_table["Y"],c=g_table["G"],cmap="gray",alpha=1)
 plt.scatter(g_table2["X"],g_table2["Y"],marker="+",c="red",s=200)
-
 plt.grid(True) #グラフへのグリッド追加
 plt.title("G") #グラフへのタイトル追加
 plt.tight_layout() #グラフのレイアウト調整
