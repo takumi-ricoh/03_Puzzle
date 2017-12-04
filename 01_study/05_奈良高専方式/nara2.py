@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt #グラフ
 import pandas as pd #データフレーム
 import glob
 import itertools
-
+from scipy import interpolate
 #%%画像取得
 def get_img(file):
     img  = cv2.imread(file)
@@ -144,18 +144,72 @@ def get_uneven(curves,img):
             unevens.append("hollow")
     return unevens
 
-#%%実行部分
-#ファイル取得
+#%%チェックリスト生成
+def make_shapelist():
+    seq = ["straight","bump","hollow"]
+    shapelist_all=[]
+    shapelist=[]
+    #全リストの生成
+    for i in itertools.product(seq,repeat=4):
+        shapelist_all.append(list(i))
+    
+    #回転して重複したものを除去
+    for idx,i in enumerate(shapelist_all):
+        for j in range(4):
+            #並べ替えデータ
+            tmp = i[:-1]
+            tmp.insert(0,i[-1])
+            #あるかのチェック
+            if tmp in shapelist_all[:idx]:
+                break
+        else:
+            shapelist.append(tmp)
+
+    return shapelist
+
+#%%形状タイプのチェック
+def check_shapetype(unevens,shapelist):
+    for idx,i in enumerate(shapelist):
+        tmp = unevens.copy()
+        for j in range(4):
+            #候補の並べ替え
+            tmp1 = tmp[:-1]
+            tmp1.insert(0,tmp[-1])
+            tmp = tmp1
+            #チェック
+            if tmp1 == i:
+                print(tmp1)
+                return idx
+                break
+
+#%%相互相関関数のチェック
+def calc_correlation(c1,c2):
+    #等間隔(サンプリング)に直す
+    f1 = interpolate.interp1d(c1.new_axis, c1.height, kind="linear",fill_value="extrapolate")
+    f2 = interpolate.interp1d(c2.new_axis, c2.height, kind="linear",fill_value="extrapolate")    
+    x = np.linspace(0,int(max(c1.new_axis)),1001)
+    h1 = f1(x) - f1(x).mean() #平均0
+    h2 = -( f2(x) - f2(x).mean() ) #平均0
+    #相互相関
+    corr = np.correlate(h1,h2,"full")
+    
+    return corr
+
+#%%ファイル取得
 filelist = glob.glob("*.bmp") 
 filelist.sort()
+
+#形状候補
+shapelist = make_shapelist()
 
 #画像を読んで、各種データをリスト保存
 img_list = [] #画像を格納
 contour_list = [] #輪郭と角の情報を格納
-curve_list = [] #4つに切り出した情報を格納
-unevens_list = [] #4つに切り出した情報を格納
+curve_list = [] #各4辺のデータに切り出した情報を格納
+unevens_list = [] #4辺の凹凸データ
+shaperesult_list = [] #形状タイプ確認結果
+
 for idx,i in enumerate(filelist):
-    #2値画像取得
     img = get_img(i)
     #輪郭取得
     contour = detect_corner(img)
@@ -164,17 +218,25 @@ for idx,i in enumerate(filelist):
     #凹凸情報を取得
     unevens = get_uneven(curves,img)
     #形状チェック
-    
+    shaperesult = check_shapetype(unevens,shapelist)
 
     #24個をまとめたリストに保存
-    img_list.append(img)
-    contour_list.append(contour)
-    curve_list.append(curves)
+    img_list.append(img) #画像
+    contour_list.append(contour)#輪郭と角の情報
+    curve_list.append(curves)#4つにｋ里出したもの
     unevens_list.append(unevens)
+    shaperesult_list.append(shaperesult)
 
-d = make_shapelist()
-
-#グラフ表示
+#%%パズルのマッチング
+match=[]
+c1 = curve_list[0][1]
+for idxi,i in enumerate(curve_list):
+    for idxj,j in enumerate(i):
+        if unevens_list[idxi][idxj] == "hollow":
+            res = calc_correlation(c1,j)
+            match.append(res)
+        
+#%%グラフ表示
 for i in range(24):
     plt.subplot(4,6,i+1)
     plt.imshow(img_list[i])
@@ -182,14 +244,15 @@ for i in range(24):
     x = contour["X"][contour.corner==1]
     y = contour["Y"][contour.corner==1]
     plt.scatter(x,y,marker="+",c="red",s=50)
-    plt.title(str(i)+"/"+str(unevens_list[i]),size=9)
+    #plt.title(str(i)+"/"+str(unevens_list[i]),size=9)
+    plt.title("type="+str(shaperesult_list[i]),size=9)
 plt.subplots_adjust(wspace=0.4, hspace=0.6)
-
-fig = plt.figure(2)
-for j in range(4):
-    ax = fig.add_subplot(2,2,j+1)
-    curve_list[0][j].plot(x="new_axis",y="height",ax=ax)
-    #curve_list[0][j].plot(x="onaxisx",y="onaxisy",ax=ax)
+#
+#fig = plt.figure(2)
+#for j in range(4):
+#    ax = fig.add_subplot(2,2,j+1)
+#    curve_list[0][j].plot(x="new_axis",y="height",ax=ax)
+#    #curve_list[0][j].plot(x="onaxisx",y="onaxisy",ax=ax)
 
 #plt.figure(2)
 #plt.imshow(img_list[0])
