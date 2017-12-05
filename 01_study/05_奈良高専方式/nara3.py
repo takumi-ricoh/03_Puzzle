@@ -12,7 +12,8 @@ import pandas as pd #データフレーム
 import glob
 import itertools
 from scipy import interpolate
-from scipy import signal
+
+plt.close(True)
 #%%画像取得
 def get_img(file):
     img  = cv2.imread(file)
@@ -178,28 +179,15 @@ def check_shapetype(unevens,shapelist):
 #%%相互相関関数のチェック
 def calc_correlation(c1,c2):
     
-    #等間隔(サンプリング)に直す
-    t = np.linspace(0,int(max(c1.new_axis)),1001)
     x1,y1 = c1.new_axis, c1.height
     x2,y2 = c2.new_axis, c2.height    
-    f1 = interpolate.interp1d(c1.new_axis, c1.height, kind="linear",bounds_error=False)
-    f2 = interpolate.interp1d(c2.new_axis, c2.height, kind="linear",bounds_error=False)    
-    h1=f1(t)
-    h2=f2(t)
-    #tck1 = interpolate.splrep(c1.new_axis, c1.height,s=0)
-    #tck2 = interpolate.splrep(c2.new_axis, c2.height,s=0)   
-    #h1 = interpolate.splev(x,tck1)
-    #h2 = interpolate.splev(x,tck2)
-#    f1 = interpolate.make_interp_spline(c1.new_axis, c1.height)
-#    f2 = interpolate.make_interp_spline(c2.new_axis, c2.height)    
-#    h1=f1(x)
-#    h2=f2(x)    
-    #h1 = f1(x) - f1(x).mean() #平均0
-    #h2 = -( f2(x) - f2(x).mean() ) #平均0
+    y1 =   y1 - y1.mean() #平均0
+    y2 = -(y2 - y2.mean() ) #平均0
     #相互相関
-    corr = np.correlate(h1,h2,"full")
-    
-    return [h1,h2,corr]
+#    corr = np.correlate(y1,y2,"full")
+    plt.plot(x1,y1,".-")
+    plt.plot(x2,y2,".-r")
+    #return corr
 
 #%%ファイル取得
 filelist = glob.glob("*.bmp") 
@@ -225,7 +213,6 @@ for idx,i in enumerate(filelist):
     unevens = get_uneven(curves,img)
     #形状チェック
     shaperesult = check_shapetype(unevens,shapelist)
-    
 
     #24個をまとめたリストに保存
     img_list.append(img) #画像
@@ -236,9 +223,14 @@ for idx,i in enumerate(filelist):
 
 #%%パズルのマッチング
 match=[]
-c1 = curve_list[0][1]
-c2 = curve_list[0][2]
-
+c1 = curve_list[8][1]
+count = 1
+for idx1,curve in enumerate(curve_list):
+    for idx2,c2 in enumerate(curve):
+        if unevens_list[idx1][idx2] == "hollow":
+            plt.subplot(8,5,count)
+            calc_correlation(c1,c2)
+            count = count+1
 
 #for idxi,i in enumerate(curve_list):
 #    for idxj,j in enumerate(i):
@@ -246,17 +238,17 @@ c2 = curve_list[0][2]
 #            res = calc_correlation(c1,j)
 #            match.append(res)
         
-#%%グラフ表示
-for i in range(24):
-    plt.subplot(4,6,i+1)
-    plt.imshow(img_list[i])
-    contour = contour_list[i]
-    x = contour["X"][contour.corner==1]
-    y = contour["Y"][contour.corner==1]
-    plt.scatter(x,y,marker="+",c="red",s=50)
-    #plt.title(str(i)+"/"+str(unevens_list[i]),size=9)
-    plt.title("type="+str(shaperesult_list[i]),size=9)
-plt.subplots_adjust(wspace=0.4, hspace=0.6)
+##%%グラフ表示
+#for i in range(24):
+#    plt.subplot(4,6,i+1)
+#    plt.imshow(img_list[i])
+#    contour = contour_list[i]
+#    x = contour["X"][contour.corner==1]
+#    y = contour["Y"][contour.corner==1]
+#    plt.scatter(x,y,marker="+",c="red",s=50)
+#    #plt.title(str(i)+"/"+str(unevens_list[i]),size=9)
+#    plt.title("type="+str(shaperesult_list[i]),size=9)
+#plt.subplots_adjust(wspace=0.4, hspace=0.6)
 
 #
 #fig = plt.figure(2)
