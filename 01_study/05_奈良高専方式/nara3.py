@@ -199,7 +199,7 @@ def calc_correlation(c1,c2):
     #相互相関
     corr = np.correlate(h1,h2,"full")
     
-    return [h1,h2,corr]
+    return [t,h1,h2,corr]
 
 #%%ファイル取得
 filelist = glob.glob("*.bmp") 
@@ -236,34 +236,35 @@ for idx,i in enumerate(filelist):
 
 #%%パズルのマッチング
 match=[]
-c1 = curve_list[0][1]
+c1 = curve_list[0][0]
 c2 = curve_list[0][2]
 
 
-#for idxi,i in enumerate(curve_list):
-#    for idxj,j in enumerate(i):
-#        if unevens_list[idxi][idxj] == "hollow":
-#            res = calc_correlation(c1,j)
-#            match.append(res)
-        
+for idxi,i in enumerate(curve_list):
+    for idxj,j in enumerate(i):
+        if unevens_list[idxi][idxj] == "hollow":
+            res = calc_correlation(c1,j)
+            match.append(res)
+
+
+
 #%%グラフ表示
-for i in range(24):
-    plt.subplot(4,6,i+1)
-    plt.imshow(img_list[i])
-    contour = contour_list[i]
-    x = contour["X"][contour.corner==1]
-    y = contour["Y"][contour.corner==1]
-    plt.scatter(x,y,marker="+",c="red",s=50)
-    #plt.title(str(i)+"/"+str(unevens_list[i]),size=9)
-    plt.title("type="+str(shaperesult_list[i]),size=9)
-plt.subplots_adjust(wspace=0.4, hspace=0.6)
+#for i in range(24):
+#    plt.subplot(4,6,i+1)
+#    plt.imshow(img_list[i])
+#    contour = contour_list[i]
+#    x = contour["X"][contour.corner==1]
+#    y = contour["Y"][contour.corner==1]
+#    plt.scatter(x,y,marker="+",c="red",s=50)
+#    #plt.title(str(i)+"/"+str(unevens_list[i]),size=9)
+#    plt.title("type="+str(shaperesult_list[i]),size=9)
+#plt.subplots_adjust(wspace=0.4, hspace=0.6)
 
 #
-#fig = plt.figure(2)
-#for j in range(4):
-#    ax = fig.add_subplot(2,2,j+1)
-#    curve_list[0][j].plot(x="new_axis",y="height",ax=ax)
-#    #curve_list[0][j].plot(x="onaxisx",y="onaxisy",ax=ax)
+fig = plt.figure(2)
+for j in range(4):
+    ax = fig.add_subplot(2,2,j+1)
+    curve_list[0][j].plot(x="new_axis",y="height",ax=ax)
 
 #plt.figure(2)
 #plt.imshow(img_list[0])
