@@ -71,7 +71,7 @@ def get_tfdata(data):
     
     sx = np.array(data.iloc[0]["X"]) #始点
     sy = np.array(data.iloc[0]["Y"])
-    ex = np.array(data.iloc[-1]["X"]) #始点
+    ex = np.array(data.iloc[-1]["X"]) #終点
     ey = np.array(data.iloc[-1]["Y"])
 
     #始点～終点ベクトル
@@ -90,15 +90,15 @@ def get_tfdata(data):
     axis = f(v,axis=1)*np.cos(theta)
     axis[0]=0 #nan消す
     #axisの、「元座標」 ：p1 + u/|u|*axis
-    x = sx + u[0]*(axis/f(u))
-    y = sy + u[1]*(axis/f(u))
+    #x = sx + u[0]*(axis/f(u))
+    #y = sy + u[1]*(axis/f(u))
     
     data["axis"] = axis
     data["height"]   = height
 
     return data
     
-#%%角をつなぐ直線に対する曲線抽出
+#%%角をつなぐ4辺に対する曲線抽出
 def get_curve(contour):
     ###まず、cornerを4つに分割する
     
@@ -177,8 +177,7 @@ def check_shapetype(unevens,shapelist):
                 break
 
 #%%移動平均の計算
-def mov_ave(x):
-    num=10#移動平均の個数
+def mov_ave(x,num):
     b=np.ones(num)/num
     y=np.convolve(x, b, mode='same')#移動平均
     return y
@@ -193,9 +192,17 @@ def calc_diff(curves):
         y_diff = np.r_[0,np.diff(y)]
         diff = y_diff/x_diff
         #移動平均
-        diff2 = mov_ave(diff)
+        diff2 = mov_ave(diff,5)
         curve["diff_curve"] = diff2
     
+    return curves    
+
+#%%グラフの移動平均
+def curve2ave(curves):
+    curves = curves.copy()
+    for curve in curves:
+        curve["height_ave"] = mov_ave(curve["height"],5)
+        
     return curves    
 
 #%%カーブに沿った累積距離
@@ -228,8 +235,10 @@ for idx,i in enumerate(filelist):
     img = get_img(i)
     #輪郭取得
     contour = detect_corner(img)
-    #4つの曲線を取得
+    #4辺の曲線を取得
     curves = get_curve(contour)
+    #4つの曲線を取得
+    curves = curve2ave(curves)
     #1次微分の追加
     curves = calc_diff(curves)
     #累積長さの追加
@@ -247,45 +256,52 @@ for idx,i in enumerate(filelist):
     shaperesult_list.append(shaperesult)
 
 #%%パズルのマッチング
-#match=[]
-#c1 = curve_list[0][0]
-#c2 = curve_list[0][2]
-#
-#
-#for idxi,i in enumerate(curve_list):
-#    for idxj,j in enumerate(i):
-#        if unevens_list[idxi][idxj] == "hollow":
-#            res = calc_correlation(c1,j)
-#            match.append(res)
+    
+scores=[]
+c1 = curve_list[8][1]
 
-
+for idxi,curve in enumerate(curve_list):
+    for idxj,c2 in enumerate(curves):
+        if unevens_list[idxi][idxj] == "hollow":
+            d1 = np.array(c1[["axis","height"]])
+            d2 = np.array(c2[["axis","height"]])
+            d1[:,1] = d1[:,1] - min(d1[:,1]) + 5
+            d2[:,1] = d2[:,1] - min(d2[:,1]) + 5
+            #score = cv2.matchShapes(d1,d2,3,0.0)
+            score=1
+            scores.append(score)
 
 #%%グラフ表示
-def plotter(c1,c2):
+def plotter(c1,c2,score=0):
     
-    x1,y1 = c1.csum, c1.diff_curve
-    x2,y2 = c2.csum, c2.diff_curve    
+    x1,y1 = c1["axis"], c1["height_ave"]
+    x2,y2 = c2["axis"], c2["height_ave"]    
     y1 =   y1 - y1.mean() #平均0
     y2 = -(y2 - y2.mean() ) #平均0
-    plt.plot(x1,y1,".-")
-    plt.plot(x2,y2,".-r")
+    plt.plot(x1,y1,"-",linewidth=1)
+    plt.plot(x2,y2,"-r",linewidth=1)
+    plt.title("score="+str(score),size=8)
+    plt.grid(True)
+    plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
     
+#プロット
 c1 = curve_list[8][1]
 count = 1
-for idx1,curve in enumerate(curve_list):
-    for idx2,c2 in enumerate(curve):
+for idx1,curves in enumerate(curve_list):
+    for idx2,c2 in enumerate(curves):
         if unevens_list[idx1][idx2] == "hollow":
-            plt.subplot(8,5,count)
-            plotter(c1,c2)
+            plt.subplot(3,3,count)
+            plotter(c1,c2,np.round(scores[idx1],2))
+            if count == 9:
+                break
             count = count+1
-
-#for idxi,i in enumerate(curve_list):
-#    for idxj,j in enumerate(i):
-#        if unevens_list[idxi][idxj] == "hollow":
-#            res = calc_correlation(c1,j)
-#            match.append(res)
+    else:
+        continue
+    break
+plt.subplots_adjust(hspace=0.5)
         
-##%%グラフ表示
+#%%グラフ表示
+#plt.figure(2)
 #for i in range(24):
 #    plt.subplot(4,6,i+1)
 #    plt.imshow(img_list[i])
@@ -296,12 +312,3 @@ for idx1,curve in enumerate(curve_list):
 #    #plt.title(str(i)+"/"+str(unevens_list[i]),size=9)
 #    plt.title("type="+str(shaperesult_list[i]),size=9)
 #plt.subplots_adjust(wspace=0.4, hspace=0.6)
-
-#
-#fig = plt.figure(2)
-#for j in range(4):
-#    ax = fig.add_subplot(2,2,j+1)
-#    curve_list[0][j].plot(x="new_axis",y="height",ax=ax)
-
-#plt.figure(2)
-#plt.imshow(img_list[0])
