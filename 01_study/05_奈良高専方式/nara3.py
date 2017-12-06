@@ -93,7 +93,7 @@ def get_tfdata(data):
     x = sx + u[0]*(axis/f(u))
     y = sy + u[1]*(axis/f(u))
     
-    data["new_axis"] = axis
+    data["axis"] = axis
     data["height"]   = height
 
     return data
@@ -176,16 +176,39 @@ def check_shapetype(unevens,shapelist):
                 return idx
                 break
 
-#%%相互相関関数のチェック
-def calc_correlation(c1,c2):
+#%%移動平均の計算
+def mov_ave(x):
+    num=10#移動平均の個数
+    b=np.ones(num)/num
+    y=np.convolve(x, b, mode='same')#移動平均
+    return y
+
+#%%微分値の計算
+def calc_diff(curves):
+    curves = curves.copy()
+    for curve in curves:
+        x = curve.axis
+        y = curve.height
+        x_diff = np.r_[1,np.diff(x)]
+        y_diff = np.r_[0,np.diff(y)]
+        diff = y_diff/x_diff
+        #移動平均
+        diff2 = mov_ave(diff)
+        curve["diff_curve"] = diff2
     
-    x1,y1 = c1.new_axis, c1.height
-    x2,y2 = c2.new_axis, c2.height    
-    y1 =   y1 - y1.mean() #平均0
-    y2 = -(y2 - y2.mean() ) #平均0
-    np.correlate(y1,y2,"full")
-    plt.plot(x1,y1,".-")
-    plt.plot(x2,y2,".-r")
+    return curves    
+
+#%%カーブに沿った累積距離
+def curve_sum(curves):
+    curves = curves.copy()
+    for curve in curves:
+        x = curve.axis
+        y = curve.height
+        csum = np.cumsum(np.diff(x)**2 + np.diff(y)**2)
+        csum = np.r_[0,csum]
+        curve["csum"] = csum
+        
+    return curves        
 
 #%%ファイル取得
 filelist = glob.glob("*.bmp") 
@@ -207,11 +230,15 @@ for idx,i in enumerate(filelist):
     contour = detect_corner(img)
     #4つの曲線を取得
     curves = get_curve(contour)
+    #1次微分の追加
+    curves = calc_diff(curves)
+    #累積長さの追加
+    curves = curve_sum(curves)
     #凹凸情報を取得
     unevens = get_uneven(curves,img)
     #形状チェック
     shaperesult = check_shapetype(unevens,shapelist)
-
+    
     #24個をまとめたリストに保存
     img_list.append(img) #画像
     contour_list.append(contour)#輪郭と角の情報
@@ -220,28 +247,36 @@ for idx,i in enumerate(filelist):
     shaperesult_list.append(shaperesult)
 
 #%%パズルのマッチング
-match=[]
-c1 = curve_list[0][0]
-c2 = curve_list[0][2]
-
-
-for idxi,i in enumerate(curve_list):
-    for idxj,j in enumerate(i):
-        if unevens_list[idxi][idxj] == "hollow":
-            res = calc_correlation(c1,j)
-            match.append(res)
+#match=[]
+#c1 = curve_list[0][0]
+#c2 = curve_list[0][2]
+#
+#
+#for idxi,i in enumerate(curve_list):
+#    for idxj,j in enumerate(i):
+#        if unevens_list[idxi][idxj] == "hollow":
+#            res = calc_correlation(c1,j)
+#            match.append(res)
 
 
 
 #%%グラフ表示
-
+def plotter(c1,c2):
+    
+    x1,y1 = c1.csum, c1.diff_curve
+    x2,y2 = c2.csum, c2.diff_curve    
+    y1 =   y1 - y1.mean() #平均0
+    y2 = -(y2 - y2.mean() ) #平均0
+    plt.plot(x1,y1,".-")
+    plt.plot(x2,y2,".-r")
+    
 c1 = curve_list[8][1]
 count = 1
 for idx1,curve in enumerate(curve_list):
     for idx2,c2 in enumerate(curve):
         if unevens_list[idx1][idx2] == "hollow":
             plt.subplot(8,5,count)
-            calc_correlation(c1,c2)
+            plotter(c1,c2)
             count = count+1
 
 #for idxi,i in enumerate(curve_list):
