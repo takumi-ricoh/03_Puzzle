@@ -67,34 +67,32 @@ def detect_corner(binary_img):
 #%%座標変換したデータの計算
 def get_tfdata(data):
     
-    data = data.copy() #一旦コピー
+    data = data.copy()
     
+    #回転角度計算
     sx = np.array(data.iloc[0]["X"]) #始点
     sy = np.array(data.iloc[0]["Y"])
     ex = np.array(data.iloc[-1]["X"]) #終点
     ey = np.array(data.iloc[-1]["Y"])
+    s = np.array([sx,sy])
+    e = np.array([ex,ey])
+    theta = -np.arctan((ey-sy)/(ex-sx)) 
 
-    #始点～終点ベクトル
-    u = np.array([ex-sx,ey-sy])
-    #始点～曲線へのベクトル
-    v = np.array([data["X"]-sx,data["Y"]-sy]).T
+    #変換するデータ
+    d0 = data[["X","Y"]].T
 
-    #norm計算多いので名前つける
-    f = np.linalg.norm
-
-    #uとvの角度(rad):  cosθ = 内積/|a||b]    
-    theta = np.arccos(v@u/(f(u)*f(v,axis=1)))    
-    #曲線から垂直に降ろした線の高さ
-    height = np.cross(u, v) / f(u)
-    #uベクトルに沿った新たな座標軸
-    axis = f(v,axis=1)*np.cos(theta)
-    axis[0]=0 #nan消す
-    #axisの、「元座標」 ：p1 + u/|u|*axis
-    #x = sx + u[0]*(axis/f(u))
-    #y = sy + u[1]*(axis/f(u))
+    #回転変換
+    """
+    G=np.array([[np.cos(theta) ,-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
+    res = (G@d0).T
+    res2 = res - res[0,:]
+    """
     
-    data["axis"] = axis
-    data["height"]   = height
+    res2 = cv2.getAffineTransform(s,e)
+    
+    #計算結果
+    data["axis"]    = res2[:,0]
+    data["height"]  = res2[:,1]
 
     return data
     
@@ -286,7 +284,7 @@ e1 = curveimgs_list[8][1]
 
 for idxi,curve in enumerate(curve_list):
     for idxj,c2 in enumerate(curves):
-        if unevens_list[idxi][idxj] == "bump":
+        if unevens_list[idxi][idxj] == "hollow":
             d1 = np.array(c1[["axis","height"]])
             d2 = np.array(c2[["axis","height"]])
             d1[:,1] = d1[:,1] - min(d1[:,1]) + 5
@@ -295,8 +293,8 @@ for idxi,curve in enumerate(curve_list):
             d2 = np.int32(d2)
                         
             e2 = curveimgs_list[idxi][idxj]
-            score = cv2.matchShapes(d1,d2,2,0.0)
-            #score = cv2.matchShapes(e1,e2,1,0.0)
+            #score = cv2.matchShapes(d1,d2,1,0.0)
+            score = cv2.matchShapes(e1,e2,2,0.0)
             #score=1
             scores.append(score)
 
@@ -305,7 +303,7 @@ def plotter(c1,c2,score=0):
     x1,y1 = c1["axis"], c1["height_ave"]
     x2,y2 = c2["axis"], c2["height_ave"]    
     y1 =   y1 - y1.mean() #平均0
-    y2 = (y2 - y2.mean() ) #平均0
+    y2 = -(y2 - y2.mean() ) #平均0
     plt.plot(x1,y1,"-",linewidth=1)
     plt.plot(x2,y2,"-r",linewidth=1)
     plt.title("score="+str(score),size=8)
@@ -317,10 +315,10 @@ c1 = curve_list[8][1]
 count = 1
 for idx1,curves in enumerate(curve_list):
     for idx2,c2 in enumerate(curves):
-        if unevens_list[idx1][idx2] == "bump":
-            plt.subplot(8,5,count)
-            plotter(c1,c2,np.round(scores[count-1],5))
-            if count == 40:
+        if unevens_list[idx1][idx2] == "hollow":
+            plt.subplot(3,3,count)
+            plotter(c1,c2,np.round(scores[idx1],4))
+            if count == 9:
                 break
             count = count+1
     else:
