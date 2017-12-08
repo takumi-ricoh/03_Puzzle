@@ -121,10 +121,9 @@ def get_curve(contour):
     return curves
 
 #%%B-spline/Aperiodic
-def calc_bsplineA(curve):
-    curve = curve.copy()
-    x=curve["axis"]
-    y=curve["height"]
+def calc_bsplineA(data):
+    x=data[:,0]
+    y=data[:,1]
     
     for i in range(10):
         
@@ -148,16 +147,41 @@ def calc_bsplineA(curve):
         x=x_i
         y=y_i
     
-    curve2 = pd.DataFrame([x_i,y_i]).T
-    curve2.columns=["axis","height"]
+    res = np.c_[x_i,y_i]
     
-    return curve2
+    return res
+
+#%%B-spline
+def calc_bsplineUni(data):
+    x=data[:,0]
+    y=data[:,1]
+    
+    for i in range(1):
+        
+        t = range(len(x))
+        ipl_t = np.linspace(0.0, len(x) - 1, 100)
+    
+        x_tup = interpolate.InterpolatedUnivariateSpline(t, x)
+        y_tup = interpolate.InterpolatedUnivariateSpline(t, y)
+        
+        x_i = x_tup(ipl_t)
+        y_i = y_tup(ipl_t)
+
+        x=x_i
+        y=y_i
+    
+    res = np.c_[x_i,y_i]
+    
+    return res
 
 #%%スプラインによる平滑化
 def calc_smooth(curves):
     curves2=[]
     for curve in curves:
-        curve2 = calc_bsplineA(curve)
+        data = np.array(curve[["axis","height"]])
+        data2 = calc_bsplineA(data)
+        
+        curve2 = pd.DataFrame(data2,columns=["s_axis","s_height"])
         curves2.append(curve2)
         
     return curves2
@@ -168,9 +192,9 @@ def get_uneven(curves,img):
     for i in range(4):
         curve = curves[i] #pandas
         #heightの絶対値が最大となるときのheightをピックアップ
-        curve["height_abs"] = np.abs(curve["height"])    #一旦絶対値の列を作る
+        curve["height_abs"] = np.abs(curve["s_height"])    #一旦絶対値の列を作る
         idxmax = curve.loc[curve["height_abs"].idxmax()] #インデックスを出す
-        height = idxmax.loc["height"]
+        height = idxmax.loc["s_height"]
         #分類わけ
         if abs(height) < 10: #高さが5以下なら直線
             unevens.append("straight")
@@ -222,8 +246,8 @@ def check_shapetype(unevens,shapelist):
 def get_curvature(curves):
     curves = curves.copy()
     for curve in curves:
-        x=curve["axis"]
-        y=curve["height"]
+        x=curve["s_axis"]
+        y=curve["s_height"]
 
         dx_dt = np.gradient(x)
         dy_dt = np.gradient(y)
@@ -250,16 +274,26 @@ def get_curvature(curves):
         diff = np.r_[0,np.diff(curvature)]
         curvature[diff>0.1] = 0
     
-        curve["curvature"]=curvature
+        curve["k"]=curvature
 
     return curves
+
+#%%曲率の累積値
+def curvature_sum(curves):
+    curves = curves.copy()
+    for curve in curves:
+        curvature = curve["k"]
+        ksum = np.cumsum(np.abs(curvature))
+        curve["ksum"] = ksum
+    return curves        
+
 
 #%%カーブに沿った累積距離
 def curve_sum(curves):
     curves = curves.copy()
     for curve in curves:
-        x = curve.axis
-        y = curve.height
+        x = curve["s_axis"]
+        y = curve["s_height"]
         csum = np.cumsum(np.diff(x)**2 + np.diff(y)**2)
         csum = np.r_[0,csum]
         curve["csum"] = csum
@@ -271,7 +305,7 @@ def curves2img(curves):
     curveimgs = []
     for curve in curves:
         #輪郭を正の整数に直す
-        data = np.array(curve[["axis","height"]])
+        data = np.array(curve[["s_axis","s_height"]])
         data[:,1] = data[:,1] - min(data[:,1]) + 5
         data = np.int32(data)
         #空の画像を生成
@@ -284,7 +318,12 @@ def curves2img(curves):
         
     return curveimgs
 
-#%%ファイル取得
+
+
+#%%
+"""""""""
+実行
+"""""""""
 filelist = glob.glob("./pic/*.bmp") 
 filelist.sort()
 
@@ -305,12 +344,14 @@ for idx,i in enumerate(filelist):
     contour = detect_corner(img)
     #4辺の曲線を取得
     curves = get_curve(contour)
-    #平滑化
+    #平滑化(上書き!)
     curves = calc_smooth(curves)
     #累積長さの追加
     curves = curve_sum(curves)
     #曲率
     curves = get_curvature(curves)
+    #累積曲率の追加
+    curves = curvature_sum(curves)
     #画像生成
     curveimgs = curves2img(curves)    
     #凹凸情報を取得
@@ -349,29 +390,36 @@ for idx,i in enumerate(filelist):
 #            #score=1
 #            scores.append(score)
 
-#%%グラフ表示
+"""""""""
+プロット
+"""""""""
+
 def plotter(c1,c2,score=0):
-    x1,y1 = c1["axis"], c1["height"]
-    x2,y2 = c2["axis"], c2["height"]    
+    x1,y1 = c1["s_axis"], c1["s_height"]
+    x2,y2 = c2["s_axis"], c2["s_height"]    
     y1 =   y1 - y1.mean() #平均0
-    y2 = (y2 - y2.mean() ) #平均0
-    plt.plot(x1,y1,"-",linewidth=1)
-    plt.plot(x2,y2,"-r",linewidth=1)
-    plt.title("score="+str(score),size=8)
+    y2 = -(y2 - y2.mean() ) #平均0
+    plt.plot(x1,y1,"-",linewidth=0.7)
+    plt.plot(x2,y2,"-r",linewidth=0.7)
+    #plt.title("score="+str(score),size=8)
     plt.grid(True)
     plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
+    plt.suptitle('Puzzle Shape')
+
 
 def plotter2(c1,c2,score=0):
-    x1,y1 = c1["csum"], c1["curvature"]
-    x2,y2 = c2["csum"], c2["curvature"]    
+    x1,y1 = c1["ksum"], c1["k"]
+    x2,y2 = c2["ksum"], c2["k"]    
     y1 =   y1 - y1.mean() #平均0
     y2 = (y2 - y2.mean() ) #平均0
-    plt.plot(x1,y1,"-",linewidth=1)
-    plt.plot(x2,y2,"-r",linewidth=1)
-    plt.title("score="+str(score),size=8)
+    plt.plot(x1,y1,".-",linewidth=0.5,markersize=2)
+    plt.plot(x2,y2,".-r",linewidth=0.5,markersize=2)
+    #plt.title("score="+str(score),size=8)
     plt.ylim([-0.1,0.1])
     plt.grid(True)
     plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
+    plt.suptitle('∫k vs k')
+    plt.tight_layout()
 
 #プロット1
 plt.figure()
@@ -379,11 +427,11 @@ c1 = curve_list[0][0]
 count = 1
 for idx1,curves in enumerate(curve_list):
     for idx2,c2 in enumerate(curves):
-        if unevens_list[idx1][idx2] == "hollow":
-            plt.subplot(3,2,count)
-            plotter(c1,c2)
+        if unevens_list[idx1][idx2] == "bump":
+            plt.subplot(8,5,count)
+            plotter(c1,c2,idx1)
             #plotter2(c1,c2,np.round(scores[count-1],5))
-            if count == 5:
+            if count == 100:
                 break
             count = count+1
     else:
@@ -397,11 +445,11 @@ c1 = curve_list[0][0]
 count = 1
 for idx1,curves in enumerate(curve_list):
     for idx2,c2 in enumerate(curves):
-        if unevens_list[idx1][idx2] == "hollow":
-            plt.subplot(3,2,count)
+        if unevens_list[idx1][idx2] == "bump":
+            plt.subplot(8,5,count)
             plotter2(c1,c2)
             #plotter2(c1,c2,np.round(scores[count-1],5))
-            if count == 5:
+            if count == 100:
                 break
             count = count+1
     else:
@@ -412,17 +460,17 @@ plt.subplots_adjust(hspace=0.5)
 
     
 #%%グラフ表示
-plt.figure()
-for i in range(10):
-    plt.subplot(3,4,i+1)
-    plt.imshow(img_list[i])
-    contour = contour_list[i]
-    x = contour["X"]
-    y = contour["Y"]
-    plt.plot(x,y,c="blue")
-    cx = x[contour.corner==1]
-    cy = y[contour.corner==1]
-    plt.scatter(cx,cy,marker="+",c="red",s=50)
-    plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
-    #plt.title(str(i)+"/"+str(unevens_list[i]),size=9)
-    plt.title("type="+str(shaperesult_list[i]),size=9)
+#plt.figure()
+#for i in range(10):
+#    plt.subplot(3,4,i+1)
+#    plt.imshow(img_list[i])
+#    contour = contour_list[i]
+#    x = contour["X"]
+#    y = contour["Y"]
+#    plt.plot(x,y,c="blue")
+#    cx = x[contour.corner==1]
+#    cy = y[contour.corner==1]
+#    plt.scatter(cx,cy,marker="+",c="red",s=50)
+#    plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
+#    #plt.title(str(i)+"/"+str(unevens_list[i]),size=9)
+#    plt.title("type="+str(shaperesult_list[i]),size=9)
