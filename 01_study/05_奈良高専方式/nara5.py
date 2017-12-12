@@ -460,17 +460,17 @@ plt.subplots_adjust(hspace=0.5)
 
     
 #%%グラフ表示
-#plt.figure()
-#for i in range(10):
-#    plt.subplot(3,4,i+1)
-#    plt.imshow(img_list[i])
-#    contour = contour_list[i]
-#    x = contour["X"]
-#    y = contour["Y"]
-#    plt.plot(x,y,c="blue")
-#    cx = x[contour.corner==1]
-#    cy = y[contour.corner==1]
-#    plt.scatter(cx,cy,marker="+",c="red",s=50)
-#    plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
-#    #plt.title(str(i)+"/"+str(unevens_list[i]),size=9)
-#    plt.title("type="+str(shaperesult_list[i]),size=9)
+plt.figure()
+for i in range(24):
+    plt.subplot(5,5,i+1)
+    plt.imshow(img_list[i])
+    contour = contour_list[i]
+    x = contour["X"]
+    y = contour["Y"]
+    plt.plot(x,y,c="cyan")
+    cx = x[contour.corner==1]
+    cy = y[contour.corner==1]
+    plt.scatter(cx,cy,marker="+",c="red",s=50)
+    plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
+    #plt.title(str(i)+"/"+str(unevens_list[i]),size=9)
+    plt.title("type="+str(shaperesult_list[i]),size=9)
