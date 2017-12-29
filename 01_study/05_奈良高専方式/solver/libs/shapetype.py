@@ -13,8 +13,12 @@ import itertools
 ################
 """
 class ShapeType():
+    
+    def __init__(self, curves_tf):
+        self.curves_tf = curves_tf
+    
     #%% 辺情報の取得
-    def get_typeinfo(self, curves):
+    def get_typeinfo(self):
         """
         Parameters
         ----------
@@ -31,8 +35,8 @@ class ShapeType():
 
         #4辺の形状判定結果
         self.unevens=[]
-        for curve in curves:
-            self.unevens.append(self._get_uneven(curve, 10))
+        for curve_tf in self.curves_tf:
+            self.unevens.append(self._get_uneven(curve_tf, 10))
         
         #形状種類の判定結果
         self.shapetype = self._check_shapetype(self.unevens)
@@ -41,17 +45,10 @@ class ShapeType():
     #%% 形状候補の生成
     def _make_candidate(self):
         """
-        Parameters
-        ----------
-        無し
-        
         Returns
         -------
         res　: 全てのstraight,convex,concaveのパターンを作成
-        
-        Notes
-        -------
-        無し 
+
         """
         
         seq = ["straight","convex","concave"]
@@ -88,11 +85,7 @@ class ShapeType():
         Returns
         -------
         res　: 判定結果 (直線：straight、凸：convex、凹：concave)
-        
-        Notes
-        -------
-        yの絶対値が最大の場所が、マイナスか、プラスか、で判定
-        
+               
         """
         y = data[:,1]
         
@@ -116,7 +109,6 @@ class ShapeType():
         Parameters
         ----------
         unevens　　　　　 ：　4辺の形状のリスト
-        shape_pattern ：　形状の候補　
         
         Returns
         -------

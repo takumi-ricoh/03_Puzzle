@@ -326,7 +326,7 @@ def curves2img(curves):
 """""""""
 実行
 """""""""
-filelist = glob.glob("./pic3/*.bmp") 
+filelist = glob.glob("./source_pic/*.bmp") 
 filelist.sort()
 
 #形状候補

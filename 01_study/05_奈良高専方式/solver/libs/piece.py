@@ -44,13 +44,15 @@ class Piece():
         #輪郭データ
         self.contour_np = self._detect_contour(self.binary_img)
         #4箇所の角のデータ
-        self.corner_idx = self._detect_4corner(self.contour_np, self.img_size, margin=20)
+        self.corner_idx, self.corner = self._detect_4corner(self.contour_np, self.img_size, margin=20)
 
         #各辺の情報取得
-        self.edges = edge.Edge().get_edgeinfo(self.contour_np, self.corner_idx)
+        self.edges = edge.Edge(self.contour_np, self.corner_idx)
+        self.edges.get_edgeinfo()
 
         #形状種類の取得
-        self.shapetype = shapetype.ShapeType().get_typeinfo(self.contour_np, self.corner_idx)
+        self.shapetype = shapetype.ShapeType(self.edges.curves_tf)
+        self.shapetype.get_typeinfo()
         
     #%% 2値化
     def _get_binaryimg(self,img):
@@ -148,5 +150,8 @@ class Piece():
         
         #ソートする。重要!!!
         corner_idx.sort()
+
+        #4角の座標
+        corner = contour_np[corner_idx,:]
         
-        return corner_idx
+        return corner_idx, corner
