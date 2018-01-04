@@ -33,27 +33,38 @@ class Edge():
         curves_tf   ：　各4辺に座標変換を施したもの(リスト)
         curves_sp   ：　各4辺にスプライン処理を施したもの(リスト)
         curves_csum ：　各4辺の累積距離(リスト)
+        straight_lens : 直線距離
+        curve_lens   : 曲線距離
         
         """       
         
         #4辺の取得
         self.curves  = self._split_contour(self.contour_np, self.corner_idx)
-        
-        #座標変換
+
+        #スプライン処理の実施
+        self.curves_sp    = []
         self.curves_tf    = []
+        self.curves_csum  = []
+        self.lens_straight = []
+        self.lens_curve = []
+        self.lens_total = []
+        
+        #1辺ごとに処理 →　リスト保存
         for curve in self.curves:
-            self.curves_tf.append(self._tf(curve))
-
-#        #スプライン処理の実施
-#        self.curves_sp    = []
-#        for curve_tf in self.curves_tf:
-#            self.curves_sp.append(self._bspline(curve_tf))
-
-        #累積距離
-        self.curves_csum    = []
-        for curve in self.curves:
-            self.curves_csum.append(self._curve_sum(curve))
+            self.curve_sp       = self._bspline(curve,3,5)           #スプライン変換(配列)
+            self.curve_tf       = self._tf(self.curve_sp)        #座標変換(配列)           
+            self.curve_csum     = self._curve_sum(self.curve_tf) #累積長さ(配列)
+            self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
+            self.len_curve      = max(self.curve_csum)            #曲線距離(スカラー)
+            self.len_total      = self.len_straight + self.len_curve
             
+            self.curves_sp.append(self.curve_sp)
+            self.curves_tf.append(self.curve_tf)
+            self.curves_csum.append(self.curve_csum) 
+            self.lens_straight.append(self.len_straight)
+            self.lens_curve.append(self.len_curve)
+            self.lens_total.append(self.len_total) 
+        
     #%% 輪郭を4つに切り出す
     def _split_contour(self,contour_np, corner_idx):
         """
@@ -125,7 +136,7 @@ class Edge():
         return res
 
     #%%B-spline/Aperiodic
-    def _bspline(self, data, k=3, num=1):
+    def _bspline(self, data, k=2, num=10):
         """
         Parameters
         ----------
@@ -142,8 +153,8 @@ class Edge():
             t = range(len(x))
             ipl_t = np.linspace(0.0, len(x) - 1, 100)
         
-            x_tup = interpolate.splrep(t, x, k)
-            y_tup = interpolate.splrep(t, y, k)
+            x_tup = interpolate.splrep(t, x, k=k)
+            y_tup = interpolate.splrep(t, y, k=k)
             
             x_list = list(x_tup)
             xl = x.tolist()
@@ -168,7 +179,7 @@ class Edge():
         """
         Returns
         -------
-        res　：　累積の配列
+        res　：　累積距離の配列
 
         """       
         
@@ -177,3 +188,4 @@ class Edge():
         csum = np.cumsum(np.diff(x)**2 + np.diff(y)**2)
         csum = np.r_[0,csum]
         return csum
+    

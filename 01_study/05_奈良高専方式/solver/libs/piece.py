@@ -19,8 +19,11 @@ importlib.reload(edge)
 ################
 """
 class Piece():
-    def __init__(self,img):
-        self.img = img
+    def __init__(self,img,filepass):
+        self.img = img[40:-40,40:-40]
+        
+        self.pieceNum_old = filepass.split("\\")[-1].split(".")[0].split("_")[-1] #茂呂さんマクロで自動でついた番号
+        self.pieceNum_new = filepass.split("\\")[-1].split(".")[0].split("_")[0]  #読み出し番号
 
     #%% ピース計算
     def get_pieceinfo(self):
@@ -67,7 +70,7 @@ class Piece():
         """    
         #画像を読んで2値化
         img2 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        _, binary_img = cv2.threshold(img2, 120, 255, cv2.THRESH_BINARY)
+        _, binary_img = cv2.threshold(img2, 140, 255, cv2.THRESH_BINARY)
 
         return binary_img
 
@@ -150,6 +153,7 @@ class Piece():
         
         #ソートする。重要!!!
         corner_idx.sort()
+        #print(corner_idx)
 
         #4角の座標
         corner = contour_np[corner_idx,:]
