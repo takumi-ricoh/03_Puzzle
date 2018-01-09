@@ -37,6 +37,7 @@ class Piece():
         binary_img  ：　2値化した画像(numpy配列)
         size        ：　画像サイズ(リスト)
         contour_np  ：　輪郭(numpy配列)
+        corner      ：　4箇所の角の座標(リスト)
         corner_idx  ：　4箇所の角のインデックス
         edges       : 各辺のオブジェクト
         

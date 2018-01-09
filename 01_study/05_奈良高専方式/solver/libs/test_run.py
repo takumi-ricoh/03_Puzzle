@@ -57,7 +57,7 @@ for idx,filepass in enumerate(filelist):
     plt.text(size*2-30,size+20,    int(p.edges.lens_total[3]),color="r",size=9) #right
     plt.text(size-10,size*2-20+20, int(p.edges.lens_total[2]),color="r",size=9) #down
     
-    plt.tight_layout()
+    #plt.tight_layout()
     
     a.append(p.corner)
     
