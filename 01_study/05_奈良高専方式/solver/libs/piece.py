@@ -6,6 +6,7 @@ Created on Wed Dec 27 16:17:43 2017
 """
 
 import numpy as np
+from scipy import interpolate
 import cv2
 import edge
 import shapetype
@@ -47,17 +48,17 @@ class Piece():
         self.binary_img = self._get_binaryimg(self.img)
         self.img_size = self.binary_img.shape
         
-        #平滑化後
-        self.morph_img = self._calc_morphology(self.binary_img)
-        
         #輪郭データ
-        self.contour_np = self._detect_contour(self.morph_img)
+        self.contour_np = self._detect_contour(self.binary_img)
+
+        #スプライン補間
+        self.contour_sp = self.contour_np#self._bspline(self.contour_np,2,1)
         
         #4箇所の角のデータ
-        self.corner_idx, self.corner = self._detect_4corner(self.contour_np, self.img_size, margin=20)
+        self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)
 
         #各辺の情報取得
-        self.edges = edge.Edge(self.contour_np, self.corner_idx)
+        self.edges = edge.Edge(self.contour_sp, self.corner_idx)
         self.edges.get_edgeinfo()
 
         #形状種類の取得
@@ -94,10 +95,49 @@ class Piece():
         morph_img　: 変換後画像
         """    
         #画像を読んで2値化
-        kernel = np.ones((5,5),np.uint8)
+        kernel = np.ones((10,10),np.uint8)
         img2 = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel) 
         
         return img2
+
+    #%%B-spline/Aperiodic
+    def _bspline(self, data, k=3, num=5):
+        """
+        Parameters
+        ----------
+        data　: 輪郭のnumpy配列[x,y]
+        k　　　 ： スプライン近似の次数
+        num　　:　スプライン実施回数  
+    
+        """       
+        
+        x=data[:,0]
+        y=data[:,1]
+        
+        for i in range(num):            
+            t = range(len(x))
+            ipl_t = np.linspace(0.0, len(x) - 1, 100)
+        
+            x_tup = interpolate.splrep(t, x, k=k)
+            y_tup = interpolate.splrep(t, y, k=k)
+            
+            x_list = list(x_tup)
+            xl = x.tolist()
+            x_list[1] = xl + [0.0, 0.0, 0.0, 0.0]
+            
+            y_list = list(y_tup)
+            yl = y.tolist()
+            y_list[1] = yl + [0.0, 0.0, 0.0, 0.0]
+            
+            x_i = interpolate.splev(ipl_t, x_list)
+            y_i = interpolate.splev(ipl_t, y_list)
+    
+            x=x_i
+            y=y_i
+        
+        res = np.c_[x_i,y_i]
+        
+        return res
 
     #%% 輪郭取得
     def _detect_contour(self,binary_img):
@@ -112,7 +152,7 @@ class Piece():
         """
     
         #輪郭画素抽出
-        _, contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+        _, contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)#CHAIN_APPROX_NONE 
         contour = contours[0][:,0,:]
         
         #numpy 配列

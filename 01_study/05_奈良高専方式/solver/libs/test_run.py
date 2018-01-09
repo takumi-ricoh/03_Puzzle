@@ -27,10 +27,13 @@ for idx,filepass in enumerate(filelist):
 
     #plot
     plt.figure(1)
-    plt.subplot(4,6,idx+1)
+    plt.subplot(2,3,idx+1)
     #元の画像
     plt.imshow(p.img)
-    plt.plot(p.contour_np[:,0],p.contour_np[:,1])
+    #輪郭
+    plt.plot(p.contour_np[:,0],p.contour_np[:,1],"g")
+    #スプライン後輪郭
+    plt.plot(p.contour_sp[:,0],p.contour_sp[:,1])
     #スプライン後輪郭
     plt.plot(p.edges.curves_sp[0][:,0],p.edges.curves_sp[0][:,1],"y")
     plt.plot(p.edges.curves_sp[1][:,0],p.edges.curves_sp[1][:,1],"y")

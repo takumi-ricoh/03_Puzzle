@@ -136,7 +136,7 @@ class Edge():
         return res
 
     #%%B-spline/Aperiodic
-    def _bspline(self, data, k=2, num=10):
+    def _bspline(self, data, k=3, num=10):
         """
         Parameters
         ----------
