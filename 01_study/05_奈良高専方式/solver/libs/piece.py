@@ -41,11 +41,17 @@ class Piece():
         edges       : 各辺のオブジェクト
         
         """       
+
         #2値化データ
         self.binary_img = self._get_binaryimg(self.img)
         self.img_size = self.binary_img.shape
+        
+        #平滑化後
+        self.morph_img = self._calc_morphology(self.binary_img)
+        
         #輪郭データ
-        self.contour_np = self._detect_contour(self.binary_img)
+        self.contour_np = self._detect_contour(self.morph_img)
+        
         #4箇所の角のデータ
         self.corner_idx, self.corner = self._detect_4corner(self.contour_np, self.img_size, margin=20)
 
@@ -57,6 +63,7 @@ class Piece():
         self.shapetype = shapetype.ShapeType(self.edges.curves_tf)
         self.shapetype.get_typeinfo()
         
+
     #%% 2値化
     def _get_binaryimg(self,img):
         """
@@ -74,6 +81,22 @@ class Piece():
 
         return binary_img
 
+    #%% モルフォロジー処理
+    def _calc_morphology(self,img):
+        """
+        Parameters
+        ----------
+        img : モノクロ画像
+        
+        Returns
+        -------
+        morph_img　: 変換後画像
+        """    
+        #画像を読んで2値化
+        kernel = np.ones((5,5),np.uint8)
+        img2 = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel) 
+        
+        return img2
 
     #%% 輪郭取得
     def _detect_contour(self,binary_img):

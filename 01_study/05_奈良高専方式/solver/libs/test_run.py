@@ -56,7 +56,24 @@ for idx,filepass in enumerate(filelist):
     plt.text(size-10,15+20,        int(p.edges.lens_total[0]),color="r",size=9) #up
     plt.text(size*2-30,size+20,    int(p.edges.lens_total[3]),color="r",size=9) #right
     plt.text(size-10,size*2-20+20, int(p.edges.lens_total[2]),color="r",size=9) #down
-        
+    
+    plt.tight_layout()
+    
     a.append(p.corner)
+    
+    plt.figure(2)
+    plt.subplot(4,6,idx+1)
+    plt.imshow(p.binary_img)
+    
+    plt.tight_layout()
+
+    
+    plt.figure(3)
+    plt.subplot(4,6,idx+1)
+    plt.imshow(p.morph_img)
+    
+    plt.tight_layout()
+
+    
 #    if idx>7:
 #        break

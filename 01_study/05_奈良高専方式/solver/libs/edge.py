@@ -188,4 +188,7 @@ class Edge():
         csum = np.cumsum(np.diff(x)**2 + np.diff(y)**2)
         csum = np.r_[0,csum]
         return csum
+
+
+
     
