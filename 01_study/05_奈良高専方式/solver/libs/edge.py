@@ -7,7 +7,7 @@ Created on Thu Dec 28 00:29:03 2017
 
 import numpy as np
 from scipy import interpolate
-
+import cv2
 
 """
 ################
@@ -35,6 +35,7 @@ class Edge():
         curves_csum ：　各4辺の累積距離(リスト)
         straight_lens : 直線距離
         curve_lens   : 曲線距離
+        curves_img   : エッジを画像化したもの
         
         """       
         
@@ -48,6 +49,7 @@ class Edge():
         self.lens_straight = []
         self.lens_curve = []
         self.lens_total = []
+        self.curves_img = []
         
         #1辺ごとに処理 →　リスト保存
         for curve in self.curves:
@@ -57,13 +59,15 @@ class Edge():
             self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
             self.len_curve      = max(self.curve_csum)            #曲線距離(スカラー)
             self.len_total      = self.len_straight + self.len_curve
+            self.curve_img      = self._toImg(self.curve_tf)
             
             self.curves_sp.append(self.curve_sp)
             self.curves_tf.append(self.curve_tf)
             self.curves_csum.append(self.curve_csum) 
             self.lens_straight.append(self.len_straight)
             self.lens_curve.append(self.len_curve)
-            self.lens_total.append(self.len_total) 
+            self.lens_total.append(self.len_total)
+            self.curves_img.append(self.curve_img)
         
     #%% 輪郭を4つに切り出す
     def _split_contour(self,contour_np, corner_idx):
@@ -132,6 +136,8 @@ class Edge():
         
         #マージ
         res = np.c_[axis,height]
+
+        res = res[1:-1,:]
     
         return res
 
@@ -189,6 +195,26 @@ class Edge():
         csum = np.r_[0,csum]
         return csum
 
+    #%%B-spline/Aperiodic
+    def _toImg(self, data):
+        """
+        Parameters
+        ----------
+        data　: 輪郭のnumpy配列[x,y]    
 
-
-    
+        Returns
+        -------
+        res　：　累積距離の配列
+        """       
+        ctr = data.astype(np.int32)
+        #位置調整
+        ctr[:,0] = ctr[:,0] - min(ctr[:,0]) + 5
+        ctr[:,1] = ctr[:,1] - min(ctr[:,1]) + 5
+        x=ctr[:,0]
+        y=ctr[:,1]
+        imgSize_x = np.uint32(max(x)-min(x) + 10)
+        imgSize_y = np.uint32(max(y)-min(y) + 10)
+        img = np.zeros((imgSize_y,imgSize_x),np.uint8)
+        img2 = cv2.drawContours(img.copy(),[ctr],-1,255,-1 )
+        return img2
+        
