@@ -61,18 +61,13 @@ for idx,filepass in enumerate(filelist):
     
     a.append(p.corner)
     
-    plt.figure(2)
-    plt.subplot(4,6,idx+1)
-    plt.imshow(p.binary_img)
-    
-    plt.tight_layout()
-
-    
-    plt.figure(3)
-    plt.subplot(4,6,idx+1)
-    plt.imshow(p.morph_img)
-    
-    plt.tight_layout()
+#    plt.figure(2)
+#    plt.subplot(4,6,idx+1)
+#    plt.imshow(p.binary_img)
+#    
+#    plt.figure(3)
+#    plt.subplot(4,6,idx+1)
+#    plt.imshow(p.morph_img)
 
     
 #    if idx>7:
