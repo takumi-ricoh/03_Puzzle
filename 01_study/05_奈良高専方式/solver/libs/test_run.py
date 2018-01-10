@@ -26,11 +26,14 @@ for idx,filepass in enumerate(filelist):
     p = piece.Piece(img,filepass)
     p.get_pieceinfo()
 
+    piecelist.append(p)   
+
+
     """
-    プロット1
+    プロット1 : 距離による比較
     """
     plt.figure(1)
-    plt.subplot(2,3,idx+1)
+    plt.subplot(4,6,idx+1)
     #元の画像
     plt.imshow(p.img)
     #輪郭
@@ -66,34 +69,58 @@ for idx,filepass in enumerate(filelist):
     #plt.tight_layout()
     
     """
-    プロット2
+    プロット2 ：　matchShapesによる比較
     """
 
-    if idx==0:
+    if idx==1:
         ref = p.edges.curves_img[3]
-        plt.figure(3)
-        plt.imshow(p.edges.curves_img[3])
-        print("refType=",p.shapetype.unevens[3])
-
+#        plt.figure(3)
+#        plt.subplot()
+#        plt.imshow(ref,origin="lower")
+#        print("refType=",p.shapetype.unevens[3])
 
     plt.figure(2)
-    plt.subplot(2,3,idx+1)
-    
-    s0=cv2.matchShapes(ref, p.edges.curves_img[0] ,1 ,0.0)
-    s1=cv2.matchShapes(ref, p.edges.curves_img[1] ,1 ,0.0)
-    s2=cv2.matchShapes(ref, p.edges.curves_img[2] ,1 ,0.0)
-    s3=cv2.matchShapes(ref, p.edges.curves_img[3] ,1 ,0.0)    
+    plt.subplot(4,6,idx+1)
+
+    #値が小さいほど良い    
+    s0=cv2.matchShapes(ref, p.edges.curves_img[0] ,3 ,0.0)
+    s1=cv2.matchShapes(ref, p.edges.curves_img[1] ,3 ,0.0)
+    s2=cv2.matchShapes(ref, p.edges.curves_img[2] ,3 ,0.0)
+    s3=cv2.matchShapes(ref, p.edges.curves_img[3] ,3 ,0.0)    
         
     #元の画像
-    plt.imshow(p.img)
+    plt.imshow(p.binary_img)
 
     #辺の長さ
     size=int(p.img_size[0]/2)
-    plt.text(15,size,           np.round(s1,2),color="m",size=9) #left
-    plt.text(size-10,15,        np.round(s0,2),color="m",size=9) #up
-    plt.text(size*2-30,size,    np.round(s3,2),color="m",size=9) #right
-    plt.text(size-10,size*2-20, np.round(s2,2),color="m",size=9) #down
-                
+    plt.text(15,size,           np.round(s1,3),color="m",size=9) #left
+    plt.text(size-10,15,        np.round(s0,3),color="m",size=9) #up
+    plt.text(size*2-30,size,    np.round(s3,3),color="m",size=9) #right
+    plt.text(size-10,size*2-20, np.round(s2,3),color="m",size=9) #down
+    
+
+#matchshapesによる比較
+
+res1=[]
+res2=[]
+res3=[]
+counter = 0
+#基準の辺
+for idx,i in enumerate(piecelist):
+    for ii in range(4):
+        #比較する辺
+        for jdx,j in enumerate(piecelist):
+            for jj in range(4):
+                ref = i.edges.curves_img[ii]
+                obj = j.edges.curves_img[jj]
+                s = cv2.matchShapes(ref,obj,1,0.0)
+                res2.append([idx,ii,jdx,jj,s])
+        res2=np.array(res2)
+        res1.append(res2)
+        res2=[]
+
+
+
 #    plt.figure(2)
 #    plt.subplot(4,6,idx+1)
 #    plt.imshow(p.binary_img)

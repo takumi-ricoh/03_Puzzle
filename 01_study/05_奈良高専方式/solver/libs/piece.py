@@ -79,7 +79,7 @@ class Piece():
         """    
         #画像を読んで2値化
         img2 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        _, binary_img = cv2.threshold(img2, 140, 255, cv2.THRESH_BINARY)
+        _, binary_img = cv2.threshold(img2, 150, 255, cv2.THRESH_BINARY)
 
         return binary_img
 
@@ -152,7 +152,7 @@ class Piece():
         """
     
         #輪郭画素抽出
-        _, contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)#CHAIN_APPROX_NONE 
+        _, contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)#CHAIN_APPROX_NONE 
         contour = contours[0][:,0,:]
         
         #numpy 配列

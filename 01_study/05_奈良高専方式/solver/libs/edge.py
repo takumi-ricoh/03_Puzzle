@@ -215,6 +215,6 @@ class Edge():
         imgSize_x = np.uint32(max(x)-min(x) + 10)
         imgSize_y = np.uint32(max(y)-min(y) + 10)
         img = np.zeros((imgSize_y,imgSize_x),np.uint8)
-        img2 = cv2.drawContours(img.copy(),[ctr],-1,255,-1 )
+        img2 = cv2.drawContours(img.copy(),[ctr],-1,255,0 )
         return img2
         
