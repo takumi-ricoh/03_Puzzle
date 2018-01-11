@@ -20,12 +20,9 @@ importlib.reload(edge)
 ################
 """
 class Piece():
-    def __init__(self,img,filepass):
+    def __init__(self,img):
         self.img = img[40:-40,40:-40]
         
-        self.pieceNum_old = filepass.split("\\")[-1].split(".")[0].split("_")[-1] #茂呂さんマクロで自動でついた番号
-        self.pieceNum_new = filepass.split("\\")[-1].split(".")[0].split("_")[0]  #読み出し番号
-
     #%% ピース計算
     def get_pieceinfo(self):
         """
