@@ -17,7 +17,7 @@ class PuzzleSolver():
         #基準1辺ごとに最適な辺を選択
         self.match_res  = self._get_best_matches(self.all_scores) 
         #4辺ずつ、サブリストに分割
-#        self.match_res_p = zip(*[iter(self.match_res)]*4)
+        self.match_res_p = zip(*[iter(self.match_res)]*4)
 
     #%%すべての辺の組み合わせを確認し保存する
     def _get_all_matches(self,piecelist):
@@ -46,11 +46,11 @@ class PuzzleSolver():
     #%%各辺の最適な組み合わせを確認し保存する
     def _get_best_matches(self,all_scores):
         res= []
-        for score in enumerate(all_scores):
+        for score in all_scores:
             #形状が該当するもののみ抽出
-            tmp = score[score[:,5]==True]
+            tmp = score[score[:,4]==True]
             #この中でスコア最小となるインデックス    
-            idx = np.argmin(tmp[:,4])
+            idx = np.argmin(tmp[:,5])
             #該当行を抽出
             match = tmp[idx,:]
             #リスト保存

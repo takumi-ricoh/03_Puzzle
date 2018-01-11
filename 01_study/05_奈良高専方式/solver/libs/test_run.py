@@ -39,7 +39,7 @@ for img in img_list:
 
 #ソルバー
 solve  = solver.PuzzleSolver(pieceinfo_list)
-#solved = solve.match_res_p
+solved = solve.match_res_p
 
 """""""""""""""""""""""""""
 
@@ -53,7 +53,7 @@ solve  = solver.PuzzleSolver(pieceinfo_list)
 plt.figure(1)
 for idx in range(len(pieceinfo_list)):
     #各ピース
-    p = pieceinfo_list(idx)
+    p = pieceinfo_list[idx]
     #サブプロット
     plt.subplot(4,6,idx+1)
     #元の画像
