@@ -53,7 +53,7 @@ class Edge():
         
         #1辺ごとに処理 →　リスト保存
         for curve in self.curves:
-            self.curve_sp       = self._bspline(curve,3,5)           #スプライン変換(配列)
+            self.curve_sp       = self._bspline(curve,3,10)           #スプライン変換(配列)
             self.curve_tf       = self._tf(self.curve_sp)        #座標変換(配列)           
             self.curve_csum     = self._curve_sum(self.curve_tf) #累積長さ(配列)
             self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)

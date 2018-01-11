@@ -52,7 +52,7 @@ class Piece():
         self.contour_np = self._detect_contour(self.binary_img)
 
         #スプライン補間
-        self.contour_sp = self.contour_np#self._bspline(self.contour_np,2,1)
+        self.contour_sp = self._bspline(self.contour_np,3,1)
         
         #4箇所の角のデータ
         self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)

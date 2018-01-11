@@ -20,6 +20,7 @@ filelist = glob.glob("../../source_pic/*.bmp")
 filelist.sort()
 
 piecelist=[]
+shapelist=[]
 #結果
 for idx,filepass in enumerate(filelist):
     img = cv2.imread(filepass)
@@ -97,14 +98,10 @@ for idx,filepass in enumerate(filelist):
     plt.text(size-10,15,        np.round(s0,3),color="m",size=9) #up
     plt.text(size*2-30,size,    np.round(s3,3),color="m",size=9) #right
     plt.text(size-10,size*2-20, np.round(s2,3),color="m",size=9) #down
-    
 
 #matchshapesによる比較
-
-res1=[]
-res2=[]
-res3=[]
-counter = 0
+tmp=[]
+scores=[]#比較したインデックスと、そのスコア
 #基準の辺
 for idx,i in enumerate(piecelist):
     for ii in range(4):
@@ -113,14 +110,72 @@ for idx,i in enumerate(piecelist):
             for jj in range(4):
                 ref = i.edges.curves_img[ii]
                 obj = j.edges.curves_img[jj]
-                s = cv2.matchShapes(ref,obj,1,0.0)
-                res2.append([idx,ii,jdx,jj,s])
-        res2=np.array(res2)
-        res1.append(res2)
-        res2=[]
+                s = cv2.matchShapes(ref,obj,3,0.0)
+
+                #形状の合致
+                ref_shape = piecelist[idx].shapetype.unevens[ii]
+                obj_shape = piecelist[jdx].shapetype.unevens[jj]
+                if (ref_shape=="convex") and (obj_shape=="concave"):
+                    flag=1
+                elif (ref_shape=="concave") and (obj_shape=="convex"):
+                    flag=1
+                elif ref_shape=="straight":
+                    flag=1
+                else:
+                    flag=0
+        
+                tmp.append([idx,ii,jdx,jj,s,flag])
+        tmp=np.array(tmp)
+        scores.append(tmp)
+        tmp=[]
+
+#ベストスコア抽出
+bestscores=[]    
+for kdx,k in enumerate(scores):
+    #形状が該当するもののみ
+    a=k
+    b=a[a[:,5]==1]
+    #コノ中でスコア最小となるインデックス    
+    c=np.argmin(b[:,4])
+    #該当行を抽出
+    d=b[c,:]
+    
+    bestscores.append(d)
+
+for ndx,n in enumerate(bestscores):
+    #プロット
+    #表示ワード
+    plt.figure(4)
+    #元の画像
+    jo1 = ndx%4
+    jo2 = int(ndx/4)
+    if jo1==0:
+        w0=np.int8(bestscores[ndx])
+        w1=np.int8(bestscores[ndx+1])
+        w2=np.int8(bestscores[ndx+2])
+        w3=np.int8(bestscores[ndx+3])
+        v2k = {0:"up",1:"left",2:"down",3:"right"}
+        ww0 = str(w0[2]) + " - " + str(v2k[w0[3]])    
+        ww1 = str(w1[2]) + " - " + str(v2k[w1[3]])     
+        ww2 = str(w2[2]) + " - " + str(v2k[w2[3]])             
+        ww3 = str(w3[2]) + " - " + str(v2k[w3[3]])     
+        
+        plt.subplot(4,6,jo2+1)
+        p=piecelist[jo2]
+        plt.imshow(p.img)
+        plt.title(jo2)
+        
+        size=int(p.img_size[0]/2)
+        plt.text(15,size,           ww1,color="r",size=8) #left
+        plt.text(size-10,15,        ww0,color="r",size=8) #up
+        plt.text(size*2-30,size,    ww3,color="r",size=8) #right
+        plt.text(size-10,size*2-20, ww2,color="r",size=8) #down    
+    
+bestscores_np = np.array(bestscores)
 
 
 
+    
 #    plt.figure(2)
 #    plt.subplot(4,6,idx+1)
 #    plt.imshow(p.binary_img)
