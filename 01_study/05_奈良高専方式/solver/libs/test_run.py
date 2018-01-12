@@ -15,7 +15,7 @@ import importlib
 importlib.reload(piece)
 importlib.reload(solver)
 
-plt.close()
+plt.close("all")
 
 #ファイルリスト取得
 filelist = glob.glob("../../source_pic/*.bmp") 
@@ -106,8 +106,7 @@ for idx in range(len(pieceinfo_list)):
 
 #%% プロット3 : マッチング時のスコア表示(どこか1辺基準)
 
-#リファレンスの1辺
-ref = pieceinfo_list[1].edges.curves_img[3]
+data = solve.all_scores[2]
 
 #結果表示
 plt.figure(3)
@@ -122,10 +121,10 @@ for idx in range(len(pieceinfo_list)):
 
     #スコア
     size=int(p.img_size[0]/2)
-    score0=solved[idx][0][4]
-    score1=solved[idx][1][4]
-    score2=solved[idx][2][4]
-    score3=solved[idx][3][4]
+    score0 = data[idx*4+0,5]
+    score1 = data[idx*4+1,5]
+    score2 = data[idx*4+2,5]
+    score3 = data[idx*4+3,5]
     plt.text(15,size,           np.round(score1, 3), color="m", size=9) #left
     plt.text(size-10,15,        np.round(score0, 3), color="m", size=9) #up
     plt.text(size*2-30,size,    np.round(score3, 3), color="m", size=9) #right
@@ -141,14 +140,14 @@ for idx in range(len(pieceinfo_list)):
     p=pieceinfo_list[idx]
     
     #インデックス　→　位置　の辞書
-    w0=solved[idx][1][4]
-    w1=solved[idx][1][4]
-    w2=solved[idx][1][4]
-    w3=solved[idx][1][4]
+    w0=solved[idx][0]
+    w1=solved[idx][1]
+    w2=solved[idx][2]
+    w3=solved[idx][3]
     v2k = {0:"up",1:"left",2:"down",3:"right"}
     ww0 = str(w0[2]) + " - " + str(v2k[w0[3]])    
     ww1 = str(w1[2]) + " - " + str(v2k[w1[3]])     
-    ww2 = str(w2[2]) + " - " + str(v2k[w2[3]])             
+    ww2 = str(w2[2]) + " - " + str(v2k[w2[3]])           
     ww3 = str(w3[2]) + " - " + str(v2k[w3[3]])         
     
     #サブプロット

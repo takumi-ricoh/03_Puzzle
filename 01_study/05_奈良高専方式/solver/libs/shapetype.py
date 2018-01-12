@@ -40,7 +40,9 @@ class ShapeType():
         
         #形状種類の判定結果
         self.shapetype = self._check_shapetype(self.unevens)
-        
+
+        #隣のエッジの形状判定
+        self.next_not_straight = self._next_not_straight(self.unevens)
 
     #%% 形状候補の生成
     def _make_candidate(self):
@@ -127,3 +129,31 @@ class ShapeType():
                     print(tmp1)
                     return idx
                     break
+
+    #%%隣に"straight" が含まれるか
+    def _next_not_straight(self, unevens):
+        res = [True]*4 #初期化
+        
+        #straightが含まれなければ、全てTrueとする
+        if ("straight" in unevens) == False:
+            res = [True]*4
+
+        #隣がstraightならFalseとする
+        else:
+            for idx,uneven in enumerate(unevens):
+                if idx == 0:
+                    if (unevens[1] == "straight") or (unevens[3] == "straight"):
+                        res[idx] = False
+                elif idx == 1:
+                    if (unevens[0] == "straight") or (unevens[2] == "straight"):
+                        res[idx] = False
+                elif idx == 2:
+                    if (unevens[1] == "straight") or (unevens[3] == "straight"):
+                        res[idx] = False                        
+                elif idx == 3:
+                    if (unevens[2] == "straight") or (unevens[0] == "straight"):
+                        res[idx] = False                                       
+                else:
+                    res[idx] = True
+        
+        return res
