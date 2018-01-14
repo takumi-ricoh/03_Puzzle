@@ -113,7 +113,7 @@ class Piece():
         
         for i in range(num):            
             t = range(len(x))
-            ipl_t = np.linspace(0.0, len(x) - 1, 100)
+            ipl_t = np.linspace(0.0, len(x) - 1, 200)
         
             x_tup = interpolate.splrep(t, x, k=k)
             y_tup = interpolate.splrep(t, y, k=k)
