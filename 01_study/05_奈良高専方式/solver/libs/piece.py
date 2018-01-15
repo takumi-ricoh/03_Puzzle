@@ -49,7 +49,7 @@ class Piece():
         self.contour_np = self._detect_contour(self.binary_img)
 
         #スプライン補間
-        self.contour_sp = self._bspline(self.contour_np,1,1)
+        self.contour_sp = self.contour_np#self._bspline(self.contour_np,1,1)
         
         #4箇所の角のデータ
         self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)
@@ -97,6 +97,31 @@ class Piece():
         
         return img2
 
+    #%% 輪郭取得
+    def _detect_contour(self,binary_img):
+        """
+        Parameters
+        ----------
+        binary_img : 2値化画像
+        
+        Returns
+        -------
+        contour_np　: 輪郭のnumpy配列[x,y]
+        """
+    
+        #輪郭画素抽出
+        _, contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE )
+        contour = contours[0][:,0,:]
+        #cv2.CHAIN_APPROX_SIMPLE
+        #cv2.CHAIN_APPROX_NONE 
+        #cv2.CHAIN_APPROX_TC89_L1
+        #cv2.CHAIN_APPROX_TC89_KCOS
+        
+        #numpy 配列
+        contour_np = np.array(contour)
+    
+        return contour_np
+
     #%%B-spline/Aperiodic
     def _bspline(self, data, k=3, num=5):
         """
@@ -136,30 +161,6 @@ class Piece():
         
         return res
 
-    #%% 輪郭取得
-    def _detect_contour(self,binary_img):
-        """
-        Parameters
-        ----------
-        binary_img : 2値化画像
-        
-        Returns
-        -------
-        contour_np　: 輪郭のnumpy配列[x,y]
-        """
-    
-        #輪郭画素抽出
-        _, contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE )
-        contour = contours[0][:,0,:]
-        #cv2.CHAIN_APPROX_SIMPLE
-        #cv2.CHAIN_APPROX_NONE 
-        #cv2.CHAIN_APPROX_TC89_L1
-        #cv2.CHAIN_APPROX_TC89_KCOS
-        
-        #numpy 配列
-        contour_np = np.array(contour)
-    
-        return contour_np
 
     #%% 4箇所の角取得
     def _detect_4corner(self,contour_np, img_size=(0,0),margin=20):

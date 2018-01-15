@@ -55,7 +55,6 @@ class PuzzleSolver():
             type_bool = score[:,4]==1
             tmp = score[type_bool]
 
-                
             #直線による絞り込み
             if 5 < int(len(tmp)):
                 num1 = 5
@@ -94,68 +93,35 @@ class PuzzleSolver():
         ref_unevens = piece1.shapetype.unevens[i]
         obj_unevens = piece2.shapetype.unevens[j]
 
-        #自分と同じ形状はNG
-        if ref_type == obj_type:
-            match = False
+        search_word = [ref_type, ref_unevens, obj_type, obj_unevens]
+        
+        candidate = [
+                     #4 vs 16
+                     [4,"convex",16,"concave"],
+                     [16,"concave",4,"convex"],                     
+                     #4 vs 11
+                     [4,"concave",11,"convex"],
+                     [11,"convex",4,"concave"],
+                     #11 vs 16
+                     [11,"concave",16,"convex"],
+                     [16,"convex",11,"concave"],
+                     #16 vs 11
+                     [16,"concave",11,"convex"],
+                     [11,"convex",16,"concave"],
+                     #16 vs 31
+                     [16,"convex",31,"concave"],
+                     [31,"concave",16,"convex"],  
+                     #11 vs 31
+                     [11,"concave",31,"convex"],
+                     [31,"convex",11,"concave"],
+                     #31 vs 31
+                     [31,"concave",31,"convex"],
+                     [31,"convex",31,"concave"],]
 
-        ####
-        #type4の凸と、type16の凹はOK
-        elif (ref_unevens=="convex") and  (ref_type==4) and (obj_unevens=="concave") and (obj_type==16):
-            match = True
-        #type16の凹と、type4の凸はOK
-        elif (ref_unevens=="concave") and  (ref_type==16) and (obj_unevens=="convex") and (obj_type==4):
-            match = True
-
-        ####            
-        #type4の凹と、type11の凸はOK            
-        elif (ref_unevens=="concave") and  (ref_type==4) and (obj_unevens=="convex") and (obj_type==11):
-            match = True
-        #type11の凸と、type4の凹はOK            
-        elif (ref_unevens=="convex") and  (ref_type==11) and (obj_unevens=="concave") and (obj_type==4):
-            match = True            
-
-        ####
-        #type11の凸と、type16の凹はOK            
-        elif (ref_unevens=="convex") and  (ref_type==11) and (obj_unevens=="concave") and (obj_type==16):
-            match = True
-        #type16の凹、type11の凸はOK            
-        elif (ref_unevens=="concave") and  (ref_type==16) and (obj_unevens=="convex") and (obj_type==11):
-            match = True
-
-
-        ####            
-        #type16の凸と、type11の凹はOK            
-        elif (ref_unevens=="convex") and  (ref_type==16) and (obj_unevens=="concave") and (obj_type==11):
-            match = True
-        #type11の凹と、type16の凸はOK            
-        elif (ref_unevens=="concave") and  (ref_type==11) and (obj_unevens=="convex") and (obj_type==16):
+        #候補があればOK
+        if search_word in candidate:
             match = True
 
-        ####            
-        #type16の凸と、type31の凹はOK            
-        elif (ref_unevens=="convex") and  (ref_type==16) and (obj_unevens=="concave") and (obj_type==31):
-            match = True
-        #type31の凹と、type16の凸はOK            
-        elif (ref_unevens=="concave") and  (ref_type==31) and (obj_unevens=="convex") and (obj_type==16):
-            match = True            
-            
-        ####                        
-        #type11の凹と、type31の凸はOK            
-        elif (ref_unevens=="concave") and  (ref_type==11) and (obj_unevens=="convex") and (obj_type==31):
-            match = True
-        #type31の凸と、type11の凹はOK            
-        elif (ref_unevens=="convex") and  (ref_type==31) and (obj_unevens=="concave") and (obj_type==11):
-            match = True            
-            
-        ####                                    
-        #type31の凸と、type31の凹はOK            
-        elif (ref_unevens=="convex") and  (ref_type==31) and (obj_unevens=="concave") and (obj_type==31):
-            match = True
-        #type31の凹、type31の凸はOK            
-        elif (ref_unevens=="concave") and  (ref_type==31) and (obj_unevens=="convex") and (obj_type==31):
-            match = True
-
-        ####                                    
         #直線ならOK            
         elif ref_unevens=="straight":
             match = True
