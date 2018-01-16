@@ -9,6 +9,8 @@ import cv2
 
 class PuzzleSolver():
 
+    MATCHSHAPE_ALGO = 1
+    
     def __init__(self,pieceinfo_list):
         #初期化
         self.plist  = pieceinfo_list
@@ -136,7 +138,10 @@ class PuzzleSolver():
     def _calc_MatchShapes_score(self,piece1,i,piece2,j):
         ref = piece1.edges.curves_img[i]
         obj = piece2.edges.curves_img[j]
-        score = cv2.matchShapes(ref, obj, 1, 0.0)
+        
+        algo = PuzzleSolver.MATCHSHAPE_ALGO
+
+        score = cv2.matchShapes(ref, obj, algo, 0.0)
         
         return score
     

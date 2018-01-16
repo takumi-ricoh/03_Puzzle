@@ -14,6 +14,8 @@ import itertools
 """
 class ShapeType():
     
+    
+    
     def __init__(self, curves_tf):
         self.curves_tf = curves_tf
     

@@ -15,6 +15,12 @@ import cv2
 ################
 """
 class Edge():
+    
+    #スプライン補間パラメータ
+    BSPLINE_K = 3
+    BSPLINE_NUM = 1    
+    BSPLINE_POINTS = 200 #補間後の点数
+    
     def __init__(self,contour_np, corner_idx):
         self.contour_np = contour_np
         self.corner_idx = corner_idx
@@ -53,7 +59,7 @@ class Edge():
         
         #1辺ごとに処理 →　リスト保存
         for curve in self.curves:
-            self.curve_sp       = self._bspline(curve,3,1)           #スプライン変換(配列)
+            self.curve_sp       = self._bspline(curve, Edge.BSPLINE_K, Edge.BSPLINE_NUM, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
             self.curve_tf       = self._tf(self.curve_sp)        #座標変換(配列)           
             self.curve_csum     = self._curve_sum(self.curve_tf) #累積長さ(配列)
             self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
@@ -142,7 +148,7 @@ class Edge():
         return res
 
     #%%B-spline/Aperiodic
-    def _bspline(self, data, k=3, num=10):
+    def _bspline(self, data, k=3, num=10 ,points=100):
         """
         Parameters
         ----------
@@ -157,7 +163,7 @@ class Edge():
         
         for i in range(num):            
             t = range(len(x))
-            ipl_t = np.linspace(0.0, len(x) - 1, 100)
+            ipl_t = np.linspace(0.0, len(x) - 1, points)
         
             x_tup = interpolate.splrep(t, x, k=k)
             y_tup = interpolate.splrep(t, y, k=k)

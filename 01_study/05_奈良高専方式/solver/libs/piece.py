@@ -20,8 +20,14 @@ importlib.reload(edge)
 ################
 """
 class Piece():
+    
+    #スプライン補間パラメータ
+    BSPLINE_K = 3
+    BSPLINE_NUM = 1
+    
     def __init__(self,img):
         self.img = img[40:-40,40:-40]
+        
         
     #%% ピース計算
     def get_pieceinfo(self):
@@ -49,7 +55,7 @@ class Piece():
         self.contour_np = self._detect_contour(self.binary_img)
 
         #スプライン補間
-        self.contour_sp = self.contour_np#self._bspline(self.contour_np,1,1)
+        self.contour_sp = self._bspline(self.contour_np, Piece.BSPLINE_K, Piece.BSPLINE_NUM)
         
         #4箇所の角のデータ
         self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)
