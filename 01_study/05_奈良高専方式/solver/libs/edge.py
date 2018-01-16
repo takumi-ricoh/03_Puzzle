@@ -17,9 +17,9 @@ import cv2
 class Edge():
     
     #スプライン補間パラメータ
-    BSPLINE_K = 3
-    BSPLINE_NUM = 1    
-    BSPLINE_POINTS = 200 #補間後の点数
+    BSPLINE_K =2 #次数
+    BSPLINE_NUM = 1 #回数
+    BSPLINE_POINTS = 100 #補間後の点数
     
     def __init__(self,contour_np, corner_idx):
         self.contour_np = contour_np
@@ -59,21 +59,21 @@ class Edge():
         
         #1辺ごとに処理 →　リスト保存
         for curve in self.curves:
-            self.curve_sp       = self._bspline(curve, Edge.BSPLINE_K, Edge.BSPLINE_NUM, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
+            self.curve_sp       = curve.copy()#self._bspline(curve, Edge.BSPLINE_K, Edge.BSPLINE_NUM, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
             self.curve_tf       = self._tf(self.curve_sp)        #座標変換(配列)           
             self.curve_csum     = self._curve_sum(self.curve_tf) #累積長さ(配列)
-            self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
-            self.len_curve      = max(self.curve_csum)            #曲線距離(スカラー)
-            self.len_total      = self.len_straight + self.len_curve
-            self.curve_img      = self._toImg(self.curve_tf)
+#            self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
+#            self.len_curve      = max(self.curve_csum)            #曲線距離(スカラー)
+#            self.len_total      = self.len_straight + self.len_curve
+#            self.curve_img      = self._toImg(self.curve_tf)
             
             self.curves_sp.append(self.curve_sp)
             self.curves_tf.append(self.curve_tf)
             self.curves_csum.append(self.curve_csum) 
-            self.lens_straight.append(self.len_straight)
-            self.lens_curve.append(self.len_curve)
-            self.lens_total.append(self.len_total)
-            self.curves_img.append(self.curve_img)
+#            self.lens_straight.append(self.len_straight)
+#            self.lens_curve.append(self.len_curve)
+#            self.lens_total.append(self.len_total)
+#            self.curves_img.append(self.curve_img)
         
     #%% 輪郭を4つに切り出す
     def _split_contour(self,contour_np, corner_idx):

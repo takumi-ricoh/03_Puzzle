@@ -11,30 +11,31 @@ class PuzzleSolver():
 
     MATCHSHAPE_ALGO = 1
     
-    def __init__(self,pieceinfo_list):
+    def __init__(self,pieceinfo_list1,pieceinfo_list2):
         #初期化
-        self.plist  = pieceinfo_list
+        self.plist1   = pieceinfo_list1
+        self.plist2 = pieceinfo_list2
         #すべての組み合わせスコア計算
-        self.all_scores = self._get_all_matches(self.plist)
+        self.all_scores = self._get_all_matches(self.plist1, self.plist2)
         #基準1辺ごとに最適な辺を選択
         self.match_res  = self._get_best_matches(self.all_scores) 
         #4辺ずつ、サブリストに分割
         self.match_res_p = [self.match_res[x:x+4] for x in range(0, len(self.match_res), 4)]
 
     #%%すべての辺の組み合わせを確認し保存する
-    def _get_all_matches(self,piecelist):
+    def _get_all_matches(self, piecelist1, piecelist2):
         res=[]#結果
         tmp=[]        
         #基準のピース/辺のループ
-        for idx1, piece1 in enumerate(piecelist):
+        for idx1, piece1 in enumerate(piecelist1):
             for i in range(4):
            
                 #比較するピース/辺のループ
-                for idx2,piece2 in enumerate(piecelist):
+                for idx2,piece2 in enumerate(piecelist2):
                     for j in range(4):
                         
                         #形状による絞り込みフラグ
-                        match_type = self._get_shapetype_match(piece1,i,piece2,j)
+                        match_type = self._get_shapetype_match(piece1,idx1,i,piece2,idx2,j)
                         
                         #いろいろなスコアzz
                         score1 = self._calc_MatchShapes_score(piece1,i,piece2,j)
@@ -77,10 +78,10 @@ class PuzzleSolver():
             tmp2=tmp1[idx2,:][1:num2]            
             
             #MatchShapesによる選択            
-            idx = np.argmin(tmp2[:,5])
+            idx = np.argmin(tmp1[:,5])
 
             #該当行を抽出
-            match = tmp2[idx,:]
+            match = tmp1[idx,:]
 
             #リスト保存
             res.append(match)        
@@ -88,7 +89,7 @@ class PuzzleSolver():
         
 
     #%%エッジ種類によるマッチング                    
-    def _get_shapetype_match(self,piece1,i,piece2,j):
+    def _get_shapetype_match(self,piece1,idx1,i,piece2,idx2,j):
         #比較する形状
         ref_type = piece1.shapetype.shapetype
         obj_type = piece2.shapetype.shapetype
@@ -120,8 +121,12 @@ class PuzzleSolver():
                      [31,"concave",31,"convex"],
                      [31,"convex",31,"concave"],]
 
+        #自分自身とはNG
+        if idx1 == idx2:
+            match = False
+
         #候補があればOK
-        if search_word in candidate:
+        elif search_word in candidate:
             match = True
 
         #直線ならOK            

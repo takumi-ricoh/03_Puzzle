@@ -19,6 +19,7 @@ importlib.reload(edge)
 1ピースの事前処理
 ################
 """
+
 class Piece():
     
     #スプライン補間パラメータ
@@ -55,7 +56,7 @@ class Piece():
         self.contour_np = self._detect_contour(self.binary_img)
 
         #スプライン補間
-        self.contour_sp = self._bspline(self.contour_np, Piece.BSPLINE_K, Piece.BSPLINE_NUM)
+        self.contour_sp = self.contour_np#self._bspline(self.contour_np, Piece.BSPLINE_K, Piece.BSPLINE_NUM)
         
         #4箇所の角のデータ
         self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)
@@ -65,8 +66,8 @@ class Piece():
         self.edges.get_edgeinfo()
 
         #形状種類の取得
-        self.shapetype = shapetype.ShapeType(self.edges.curves_tf)
-        self.shapetype.get_typeinfo()
+#        self.shapetype = shapetype.ShapeType(self.edges.curves_tf)
+#        self.shapetype.get_typeinfo()
         
 
     #%% 2値化
@@ -231,3 +232,41 @@ class Piece():
         corner = contour_np[corner_idx,:]
         
         return corner_idx, corner
+
+#%% 黒ブロブの処理(白ブロブを継承してつかう)
+"""
+################
+黒ブロブ用の処理(Pieceを継承してつかう)
+################
+"""
+class Piece_black(Piece):
+
+    #ここをオーバーライドする
+    def _detect_contour(self,binary_img):
+        """
+        Parameters
+        ----------
+        binary_img : 2値化画像
+        
+        Returns
+        -------
+        contour_np　: 輪郭のnumpy配列[x,y]
+        """
+
+        #ネガポジ反転する
+        binary_img_nega = 255 - binary_img
+        
+        #輪郭画素抽出
+        _, contours, hierarchy = cv2.findContours(binary_img_nega, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE )
+        contour = contours[1][:,0,:]
+        #cv2.CHAIN_APPROX_SIMPLE
+        #cv2.CHAIN_APPROX_NONE 
+        #cv2.CHAIN_APPROX_TC89_L1
+        #cv2.CHAIN_APPROX_TC89_KCOS
+        
+        #numpy 配列
+        contour_np = np.array(contour)
+    
+        return contour_np
+
+

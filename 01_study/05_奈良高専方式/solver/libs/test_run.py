@@ -15,10 +15,13 @@ import importlib
 importlib.reload(piece)
 importlib.reload(solver)
 
+#プロット色々ためすための、、、
+IMGN1 = 4 #サブプロット縦　個数
+IMGN2 = 6 #サブプロット横　個数
 plt.close("all")
 
 #ファイルリスト取得
-filelist = glob.glob("../../source_pic/*.bmp") 
+filelist = glob.glob("../../source_pic2/*.bmp") 
 filelist.sort()
 
 
@@ -29,16 +32,15 @@ for idx,filepass in enumerate(filelist):
     img_list.append(img)
 
 
-#全ピース/エッジ/形状種類の情報取得
+#全ピース/エッジ/形状種類の情報取得(白ブロブ)
 pieceinfo_list = []
 for img in img_list:
     p = piece.Piece(img)
     p.get_pieceinfo()
     pieceinfo_list.append(p)        
-
-
-#ソルバー
-solve  = solver.PuzzleSolver(pieceinfo_list)
+    
+#ソルバー （違う輪郭同士の比較に対応で　引数2つ)
+solve  = solver.PuzzleSolver(pieceinfo_list, pieceinfo_list)
 solved = solve.match_res_p
 
 """""""""""""""""""""""""""
@@ -55,26 +57,30 @@ for idx in range(len(pieceinfo_list)):
     #各ピース
     p = pieceinfo_list[idx]
     #サブプロット
-    plt.subplot(4,6,idx+1)
+    plt.subplot(IMGN1,IMGN2,idx+1)
     #元の画像
-    plt.imshow(p.img)
+    plt.imshow(p.binary_img)
+    #plt.imshow(p.img) 
     #輪郭
     plt.plot(p.contour_np[:,0],p.contour_np[:,1],"g")
     #スプライン後全輪郭
-    plt.plot(p.contour_sp[:,0],p.contour_sp[:,1])
+    plt.plot(p.contour_sp[:,0],p.contour_sp[:,1],"m")
     #各辺のスプライン後輪郭
-    plt.plot(p.edges.curves_sp[0][:,0],p.edges.curves_sp[0][:,1],"y")
-    plt.plot(p.edges.curves_sp[1][:,0],p.edges.curves_sp[1][:,1],"y")
-    plt.plot(p.edges.curves_sp[2][:,0],p.edges.curves_sp[2][:,1],"y")
-    plt.plot(p.edges.curves_sp[3][:,0],p.edges.curves_sp[3][:,1],"y")    
+    plt.plot(p.edges.curves_sp[0][:,0], p.edges.curves_sp[0][:,1], "r")
+    plt.plot(p.edges.curves_sp[1][:,0], p.edges.curves_sp[1][:,1], "r")
+    plt.plot(p.edges.curves_sp[2][:,0], p.edges.curves_sp[2][:,1], "r")
+    plt.plot(p.edges.curves_sp[3][:,0], p.edges.curves_sp[3][:,1], "r")    
     #4つ角
     plt.plot(p.corner[:,0],p.corner[:,1],"r*")
+    #軸を非表示
     plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
     #形状タイプ
     plt.title(p.shapetype.shapetype)
+
+    #抜ける
+    if idx == IMGN1*IMGN2 - 1:
+        break
     
-
-
 #%% プロット2 : 辺の長さの比較
 
 #結果表示
@@ -84,25 +90,34 @@ for idx in range(len(pieceinfo_list)):
     p=pieceinfo_list[idx]
     
     #サブプロット
-    plt.subplot(4,6,idx+1)
+    plt.subplot(IMGN1,IMGN2,idx+1)
     #元の画像
     plt.imshow(p.binary_img)    
 
     #辺の長さ
     size=int(p.img_size[0]/2)
+    #マゼンタ：曲線
     plt.text(15,size,           int(p.edges.lens_curve[1]),color="m",size=9) #left
     plt.text(size-10,15,        int(p.edges.lens_curve[0]),color="m",size=9) #up
     plt.text(size*2-30,size,    int(p.edges.lens_curve[3]),color="m",size=9) #right
     plt.text(size-10,size*2-20, int(p.edges.lens_curve[2]),color="m",size=9) #down
+    #青：直線
     plt.text(15,size+10,           int(p.edges.lens_straight[1]),color="b",size=9) #left
     plt.text(size-10,15+10,        int(p.edges.lens_straight[0]),color="b",size=9) #up
     plt.text(size*2-30,size+10,    int(p.edges.lens_straight[3]),color="b",size=9) #right
     plt.text(size-10,size*2-20+10, int(p.edges.lens_straight[2]),color="b",size=9) #down
+    #赤：合計
     plt.text(15,size+20,           int(p.edges.lens_total[1]),color="r",size=9) #left
     plt.text(size-10,15+20,        int(p.edges.lens_total[0]),color="r",size=9) #up
     plt.text(size*2-30,size+20,    int(p.edges.lens_total[3]),color="r",size=9) #right
     plt.text(size-10,size*2-20+20, int(p.edges.lens_total[2]),color="r",size=9) #down
 
+    #軸を非表示
+    plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
+
+    #抜ける
+    if idx == IMGN1*IMGN2 - 1:
+        break
 
 #%% プロット3 : マッチング時のスコア表示(どこか1辺基準)
 
@@ -115,7 +130,7 @@ for idx in range(len(pieceinfo_list)):
     p=pieceinfo_list[idx]
     
     #サブプロット
-    plt.subplot(4,6,idx+1)
+    plt.subplot(IMGN1,IMGN2,idx+1)
     #元の画像
     plt.imshow(p.binary_img)
 
@@ -130,6 +145,12 @@ for idx in range(len(pieceinfo_list)):
     plt.text(size*2-30,size,    np.round(score3, 3), color="m", size=9) #right
     plt.text(size-10,size*2-20, np.round(score2, 3), color="m", size=9) #down
 
+    #軸を非表示
+    plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
+
+    #抜ける
+    if idx == IMGN1*IMGN2 - 1:
+        break
 
 #%% プロット4 : 最適な位置
 
@@ -151,7 +172,7 @@ for idx in range(len(pieceinfo_list)):
     ww3 = str(w3[2]) + " - " + str(v2k[w3[3]])         
     
     #サブプロット
-    plt.subplot(4,6,idx+1)
+    plt.subplot(IMGN1,IMGN2,idx+1)
     #元の画像
     plt.imshow(p.binary_img)
     #ピース番号
@@ -162,3 +183,6 @@ for idx in range(len(pieceinfo_list)):
     plt.text(size-10,15,        ww0,color="r",size=8) #up
     plt.text(size*2-30,size,    ww3,color="r",size=8) #right
     plt.text(size-10,size*2-20, ww2,color="r",size=8) #down        
+
+    #軸を非表示
+    plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
