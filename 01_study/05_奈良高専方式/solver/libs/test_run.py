@@ -89,9 +89,9 @@ plt.figure(2)
 for idx in range(len(pieceinfo_list)):
     
     p=pieceinfo_list[idx]
-    
+    print(idx)
     #サブプロット
-    i = (idx//4)*6 + 1
+    i = idx%4 + idx//4 + 1
     plt.subplot(IMGN1,IMGN2,i)
     
     #元の画像
