@@ -62,18 +62,18 @@ class Edge():
             self.curve_sp       = curve.copy()#self._bspline(curve, Edge.BSPLINE_K, Edge.BSPLINE_NUM, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
             self.curve_tf       = self._tf(self.curve_sp)        #座標変換(配列)           
             self.curve_csum     = self._curve_sum(self.curve_tf) #累積長さ(配列)
-#            self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
-#            self.len_curve      = max(self.curve_csum)            #曲線距離(スカラー)
-#            self.len_total      = self.len_straight + self.len_curve
-#            self.curve_img      = self._toImg(self.curve_tf)
+            self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
+            self.len_curve      = max(self.curve_csum)            #曲線距離(スカラー)
+            self.len_total      = self.len_straight + self.len_curve
+            self.curve_img      = self._toImg(self.curve_tf)
             
             self.curves_sp.append(self.curve_sp)
             self.curves_tf.append(self.curve_tf)
             self.curves_csum.append(self.curve_csum) 
-#            self.lens_straight.append(self.len_straight)
-#            self.lens_curve.append(self.len_curve)
-#            self.lens_total.append(self.len_total)
-#            self.curves_img.append(self.curve_img)
+            self.lens_straight.append(self.len_straight)
+            self.lens_curve.append(self.len_curve)
+            self.lens_total.append(self.len_total)
+            self.curves_img.append(self.curve_img)
         
     #%% 輪郭を4つに切り出す
     def _split_contour(self,contour_np, corner_idx):
@@ -165,16 +165,20 @@ class Edge():
             t = range(len(x))
             ipl_t = np.linspace(0.0, len(x) - 1, points)
         
-            x_tup = interpolate.splrep(t, x, k=k)
-            y_tup = interpolate.splrep(t, y, k=k)
+            x_tup = interpolate.splrep(t, x, k=3, s=0)
+            y_tup = interpolate.splrep(t, y, k=3, s=0)
             
             x_list = list(x_tup)
             xl = x.tolist()
-            x_list[1] = xl + [0.0, 0.0, 0.0, 0.0]
+            xl_addn = len(x_list) - len(xl)
+            x_list[1] = xl + [0]*xl_addn
+#            x_list[1] = xl + [0.0, 0.0, 0.0, 0.0]
             
             y_list = list(y_tup)
             yl = y.tolist()
-            y_list[1] = yl + [0.0, 0.0, 0.0, 0.0]
+            yl_addn = len(y_list) - len(yl)
+            y_list[1] = yl + [0]*yl_addn
+#            y_list[1] = yl + [0.0, 0.0, 0.0, 0.0]
             
             x_i = interpolate.splev(ipl_t, x_list)
             y_i = interpolate.splev(ipl_t, y_list)

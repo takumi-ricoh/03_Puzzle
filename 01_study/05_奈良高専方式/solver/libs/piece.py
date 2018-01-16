@@ -24,10 +24,9 @@ class Piece():
     
     #スプライン補間パラメータ
     BSPLINE_K = 3
-    BSPLINE_NUM = 1
     
     def __init__(self,img):
-        self.img = img[40:-40,40:-40]
+        self.img = img[40:-40,130:-130]
         
         
     #%% ピース計算
@@ -49,14 +48,16 @@ class Piece():
         """       
 
         #2値化データ
-        self.binary_img = self._get_binaryimg(self.img)
-        self.img_size = self.binary_img.shape
+        self.binary_img0 = self._get_binaryimg(self.img)
+        self.img_size = self.binary_img0.shape
+        
+        self.binary_img = self._calc_morphology(self.binary_img0)
         
         #輪郭データ
         self.contour_np = self._detect_contour(self.binary_img)
 
         #スプライン補間
-        self.contour_sp = self.contour_np#self._bspline(self.contour_np, Piece.BSPLINE_K, Piece.BSPLINE_NUM)
+        self.contour_sp = self._bspline(self.contour_np)
         
         #4箇所の角のデータ
         self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)
@@ -66,8 +67,8 @@ class Piece():
         self.edges.get_edgeinfo()
 
         #形状種類の取得
-#        self.shapetype = shapetype.ShapeType(self.edges.curves_tf)
-#        self.shapetype.get_typeinfo()
+        self.shapetype = shapetype.ShapeType(self.edges.curves_tf)
+        self.shapetype.get_typeinfo()
         
 
     #%% 2値化
@@ -117,8 +118,10 @@ class Piece():
         """
     
         #輪郭画素抽出
-        _, contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE )
+        _, contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE )
         contour = contours[0][:,0,:]
+        #RETR_CCOMP
+        #RETR_EXTERNAL
         #cv2.CHAIN_APPROX_SIMPLE
         #cv2.CHAIN_APPROX_NONE 
         #cv2.CHAIN_APPROX_TC89_L1
@@ -145,18 +148,22 @@ class Piece():
         
         for i in range(num):            
             t = range(len(x))
-            ipl_t = np.linspace(0.0, len(x) - 1, 200)
+            ipl_t = np.linspace(0.0, len(x)-1, 1000)
         
-            x_tup = interpolate.splrep(t, x, k=k)
-            y_tup = interpolate.splrep(t, y, k=k)
+            x_tup = interpolate.splrep(t, x, k=3, s=0)
+            y_tup = interpolate.splrep(t, y, k=3, s=0)
             
             x_list = list(x_tup)
             xl = x.tolist()
-            x_list[1] = xl + [0.0, 0.0, 0.0, 0.0]
+            xl_addn = len(x_list) - len(xl)
+            x_list[1] = xl + [0]*xl_addn
+#            x_list[1] = xl + [0.0, 0.0, 0.0, 0.0]
             
             y_list = list(y_tup)
             yl = y.tolist()
-            y_list[1] = yl + [0.0, 0.0, 0.0, 0.0]
+            yl_addn = len(y_list) - len(yl)
+            y_list[1] = yl + [0]*yl_addn
+#            y_list[1] = yl + [0.0, 0.0, 0.0, 0.0]
             
             x_i = interpolate.splev(ipl_t, x_list)
             y_i = interpolate.splev(ipl_t, y_list)
@@ -167,7 +174,6 @@ class Piece():
         res = np.c_[x_i,y_i]
         
         return res
-
 
     #%% 4箇所の角取得
     def _detect_4corner(self,contour_np, img_size=(0,0),margin=20):
@@ -191,8 +197,8 @@ class Piece():
         con = contour_np  
         
         #画像サイズ
-        xlen = img_size[0]
-        ylen = img_size[1]
+        xlen = img_size[1]
+        ylen = img_size[0]
     
         #画像の4隅までの距離を計算
         f_dist = np.linalg.norm #距離計算
