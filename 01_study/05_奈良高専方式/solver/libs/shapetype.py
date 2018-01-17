@@ -76,7 +76,7 @@ class ShapeType():
 
 
     #%%凹凸情報の取得
-    def _get_uneven(self,data,thresh=10):
+    def _get_uneven(self,data,thresh=50):
         """
         Parameters
         ----------
@@ -125,7 +125,7 @@ class ShapeType():
                 tmp = tmp1
                 #チェック
                 if tmp1 == i:
-                    print(tmp1)
+                    #print(tmp1)
                     return idx
                     break
 

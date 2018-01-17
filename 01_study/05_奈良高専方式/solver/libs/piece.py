@@ -23,7 +23,7 @@ importlib.reload(edge)
 class Piece():
     
     #スプライン補間パラメータ
-    BSPLINE_K = 3
+    BSPLINE_POINTS = 4000 #補間後の点数
     
     def __init__(self,img):
         self.img = img[40:-40,130:-130]
@@ -57,7 +57,7 @@ class Piece():
         self.contour_np = self._detect_contour(self.binary_img)
 
         #スプライン補間
-        self.contour_sp = self._bspline(self.contour_np)
+        self.contour_sp = self._bspline(self.contour_np, Piece.BSPLINE_POINTS)
         
         #4箇所の角のデータ
         self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)
@@ -133,7 +133,7 @@ class Piece():
         return contour_np
 
     #%%B-spline/Aperiodic
-    def _bspline(self, data, k=3, num=5):
+    def _bspline(self, data, points):
         """
         Parameters
         ----------
@@ -145,31 +145,25 @@ class Piece():
         
         x=data[:,0]
         y=data[:,1]
-        
-        for i in range(num):            
-            t = range(len(x))
-            ipl_t = np.linspace(0.0, len(x)-1, 1000)
-        
-            x_tup = interpolate.splrep(t, x, k=3, s=0)
-            y_tup = interpolate.splrep(t, y, k=3, s=0)
-            
-            x_list = list(x_tup)
-            xl = x.tolist()
-            xl_addn = len(x_list) - len(xl)
-            x_list[1] = xl + [0]*xl_addn
-#            x_list[1] = xl + [0.0, 0.0, 0.0, 0.0]
-            
-            y_list = list(y_tup)
-            yl = y.tolist()
-            yl_addn = len(y_list) - len(yl)
-            y_list[1] = yl + [0]*yl_addn
-#            y_list[1] = yl + [0.0, 0.0, 0.0, 0.0]
-            
-            x_i = interpolate.splev(ipl_t, x_list)
-            y_i = interpolate.splev(ipl_t, y_list)
+                
+        t = range(len(x))
+        ipl_t = np.linspace(0.0, len(x)-1, points)
     
-            x=x_i
-            y=y_i
+        x_tup = interpolate.splrep(t, x, k=3, s=0)
+        y_tup = interpolate.splrep(t, y, k=3, s=0)
+        
+        x_list = list(x_tup)
+        xl = x.tolist()
+        xl_addn = len(x_list) - len(xl)
+        x_list[1] = xl + [0]*xl_addn
+        
+        y_list = list(y_tup)
+        yl = y.tolist()
+        yl_addn = len(y_list) - len(yl)
+        y_list[1] = yl + [0]*yl_addn
+        
+        x_i = interpolate.splev(ipl_t, x_list)
+        y_i = interpolate.splev(ipl_t, y_list)
         
         res = np.c_[x_i,y_i]
         

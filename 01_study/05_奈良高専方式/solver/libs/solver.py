@@ -9,7 +9,7 @@ import cv2
 
 class PuzzleSolver():
 
-    MATCHSHAPE_ALGO = 1
+    MATCHSHAPE_ALGO = 2
     
     def __init__(self,pieceinfo_list1,pieceinfo_list2):
         #初期化
@@ -59,10 +59,10 @@ class PuzzleSolver():
             tmp = score[type_bool]
 
             #直線による絞り込み
-            if 5 < int(len(tmp)):
-                num1 = 5
+            if 10 < int(len(tmp)):
+                num1 = 10
             else:
-                num1 = int(len(tmp))
+                num1 = int(len(tmp)/2)
             
             idx1=np.argsort(tmp[:,6]) #6列目でソート
             tmp1=tmp[idx1,:][1:num1]
@@ -72,16 +72,16 @@ class PuzzleSolver():
             if 3 < int(len(tmp1)):
                 num2 = 3
             else:
-                num2= int(len(tmp1))
+                num2= int(len(tmp1)/2)
                 
             idx2=np.argsort(tmp1[:,7]) #7列目でソート
             tmp2=tmp1[idx2,:][1:num2]            
             
             #MatchShapesによる選択            
-            idx = np.argmin(tmp1[:,5])
+            idx = np.argmin(tmp[:,5])
 
             #該当行を抽出
-            match = tmp1[idx,:]
+            match = tmp[idx,:]
 
             #リスト保存
             res.append(match)        
@@ -141,8 +141,8 @@ class PuzzleSolver():
 
     #%%MatchShapes関数によるマッチング
     def _calc_MatchShapes_score(self,piece1,i,piece2,j):
-        ref = piece1.edges.curves_img[i]
-        obj = piece2.edges.curves_img[j]
+        ref = piece1.edges.curves_img2[i]
+        obj = piece2.edges.curves_img2[j]
         
         algo = PuzzleSolver.MATCHSHAPE_ALGO
 
