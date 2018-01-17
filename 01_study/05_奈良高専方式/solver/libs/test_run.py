@@ -58,7 +58,8 @@ for idx in range(len(pieceinfo_list)):
     #各ピース
     p = pieceinfo_list[idx]
     #サブプロット
-    plt.subplot(IMGN1,IMGN2,idx+1)
+    i = idx//4 + ((idx+4)%4)*6 + 1    
+    plt.subplot(IMGN1,IMGN2,i)
     #元の画像
     plt.imshow(p.binary_img)
     #plt.imshow(p.img) 
@@ -91,7 +92,7 @@ for idx in range(len(pieceinfo_list)):
     p=pieceinfo_list[idx]
     print(idx)
     #サブプロット
-    i = idx%4 + idx//4 + 1
+    i = idx//4 + ((idx+4)%4)*6 + 1
     plt.subplot(IMGN1,IMGN2,i)
     
     #元の画像
@@ -133,7 +134,8 @@ for idx in range(len(pieceinfo_list)):
     p=pieceinfo_list[idx]
     
     #サブプロット
-    plt.subplot(IMGN1,IMGN2,idx+1)
+    i = idx//4 + ((idx+4)%4)*6 + 1
+    plt.subplot(IMGN1,IMGN2,i)
     #元の画像
     plt.imshow(p.binary_img)
 
@@ -175,7 +177,8 @@ for idx in range(len(pieceinfo_list)):
     ww3 = str(w3[2]) + " - " + str(v2k[w3[3]])         
     
     #サブプロット
-    plt.subplot(IMGN1,IMGN2,idx+1)
+    i = idx//4 + ((idx+4)%4)*6 + 1
+    plt.subplot(IMGN1,IMGN2,i)
     #元の画像
     plt.imshow(p.binary_img)
     #ピース番号
