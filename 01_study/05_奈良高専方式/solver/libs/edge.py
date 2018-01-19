@@ -55,11 +55,12 @@ class Edge():
         self.lens_total = []
         self.curves_img = []
         self.curves_img2 = []
+        self.curves_img_dil = []
         
         #1辺ごとに処理 →　リスト保存
-        for curve in self.curves:
+        for idx,curve in enumerate(self.curves):
             self.curve_sp       = curve.copy()#self._bspline(curve, Edge.BSPLINE_K, Edge.BSPLINE_NUM, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
-            self.curve_sp       = self._bspline(curve, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
+#            self.curve_sp       = self._bspline(curve, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
             self.curve_tf       = self._tf(self.curve_sp)        #座標変換(配列)           
             self.curve_csum     = self._curve_sum(self.curve_tf) #累積長さ(配列)
             self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
@@ -67,6 +68,7 @@ class Edge():
             self.len_total      = self.len_straight + self.len_curve
             self.curve_img      = self._toImg(self.curve_tf)
             self.curve_img2      = self._toImg2(self.curve_tf)
+            self.curve_img_dil  = self._dilation(self.curve_img2)
             
             self.curves_sp.append(self.curve_sp)
             self.curves_tf.append(self.curve_tf)
@@ -76,6 +78,7 @@ class Edge():
             self.lens_total.append(self.len_total)
             self.curves_img.append(self.curve_img)
             self.curves_img2.append(self.curve_img2)
+            self.curves_img_dil.append(self.curve_img_dil)
         
     #%% 輪郭を4つに切り出す
     def _split_contour(self,contour_np, corner_idx):
@@ -201,7 +204,7 @@ class Edge():
         csum = np.r_[0,csum]
         return csum
 
-    #%% Curve to Image
+    #%% Curve to Image : use drawContours
     def _toImg(self, data):
         """
         Parameters
@@ -263,4 +266,12 @@ class Edge():
             img2[int(ctr[idx,1]),int(ctr[idx,0])] = 255
             
         return img2
+
+    #%% Curve to Image
+    def _dilation(self, img):
         
+        kernel = np.ones((3,3),np.uint8)
+
+        dilated = cv2.dilate(img,kernel,iterations = 1)
+
+        return dilated

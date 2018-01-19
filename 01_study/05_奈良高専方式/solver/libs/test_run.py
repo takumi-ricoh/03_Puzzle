@@ -37,7 +37,8 @@ pieceinfo_list = []
 for idx,img in enumerate(img_list):
     p = piece.Piece(img)
     p.get_pieceinfo()
-    pieceinfo_list.append(p)        
+    pieceinfo_list.append(p)     
+
     
 #ソルバー （違う輪郭同士の比較に対応で　引数2つ)
 solve  = solver.PuzzleSolver(pieceinfo_list, pieceinfo_list)
@@ -49,7 +50,7 @@ solved = solve.match_res_p
 
 """""""""""""""""""""""""""
 
-"""
+
 #%% プロット1 : 輪郭/形状種類の確認
 
 plt.figure(1)
@@ -60,7 +61,7 @@ for idx in range(len(pieceinfo_list)):
     i = idx//4 + ((idx+4)%4)*6 + 1    
     plt.subplot(IMGN1,IMGN2,i)
     #元の画像
-    plt.imshow(p.binary_img)
+    plt.imshow(p.img)
     #plt.imshow(p.img) 
     #輪郭
     plt.plot(p.contour_np[:,0],p.contour_np[:,1],"g")
@@ -81,7 +82,7 @@ for idx in range(len(pieceinfo_list)):
     #抜ける
     if idx == IMGN1*IMGN2 - 1:
         break
-    
+  
 #%% プロット2 : 辺の長さの比較
 
 #結果表示
@@ -100,20 +101,20 @@ for idx in range(len(pieceinfo_list)):
     #辺の長さ
     size=int(p.img_size[0]/2)
     #マゼンタ：曲線
-    plt.text(15,size,           int(p.edges.lens_curve[1]),color="m",size=9) #left
-    plt.text(size-10,15,        int(p.edges.lens_curve[0]),color="m",size=9) #up
-    plt.text(size*2-30,size,    int(p.edges.lens_curve[3]),color="m",size=9) #right
-    plt.text(size-10,size*2-20, int(p.edges.lens_curve[2]),color="m",size=9) #down
+    plt.text(15,size,           int(p.edges.lens_curve[1]),color="r",size=9) #left
+    plt.text(size-10,15,        int(p.edges.lens_curve[0]),color="r",size=9) #up
+    plt.text(size*2-30,size,    int(p.edges.lens_curve[3]),color="r",size=9) #right
+    plt.text(size-10,size*2-20, int(p.edges.lens_curve[2]),color="r",size=9) #down
     #青：直線
-    plt.text(15,size+100,           int(p.edges.lens_straight[1]),color="b",size=9) #left
-    plt.text(size-10,15+100,        int(p.edges.lens_straight[0]),color="b",size=9) #up
-    plt.text(size*2-30,size+100,    int(p.edges.lens_straight[3]),color="b",size=9) #right
-    plt.text(size-10,size*2-20+100, int(p.edges.lens_straight[2]),color="b",size=9) #down
-    #赤：合計
-    plt.text(15,size+200,           int(p.edges.lens_total[1]),color="r",size=9) #left
-    plt.text(size-10,15+200,        int(p.edges.lens_total[0]),color="r",size=9) #up
-    plt.text(size*2-30,size+200,    int(p.edges.lens_total[3]),color="r",size=9) #right
-    plt.text(size-10,size*2-20+200, int(p.edges.lens_total[2]),color="r",size=9) #down
+#    plt.text(15,size+100,           int(p.edges.lens_straight[1]),color="m",size=9) #left
+#    plt.text(size-10,15+100,        int(p.edges.lens_straight[0]),color="m",size=9) #up
+#    plt.text(size*2-30,size+100,    int(p.edges.lens_straight[3]),color="m",size=9) #right
+#    plt.text(size-10,size*2-20+100, int(p.edges.lens_straight[2]),color="m",size=9) #down
+#    #赤：合計
+#    plt.text(15,size+200,           int(p.edges.lens_total[1]),color="r",size=9) #left
+#    plt.text(size-10,15+200,        int(p.edges.lens_total[0]),color="r",size=9) #up
+#    plt.text(size*2-30,size+200,    int(p.edges.lens_total[3]),color="r",size=9) #right
+#    plt.text(size-10,size*2-20+200, int(p.edges.lens_total[2]),color="r",size=9) #down
 
     #軸を非表示
     plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
@@ -121,7 +122,7 @@ for idx in range(len(pieceinfo_list)):
     #抜ける
     if idx == IMGN1*IMGN2 - 1:
         break
-
+"""
 #%% プロット3 : マッチング時のスコア表示(どこか1辺基準)
 
 data = solve.all_scores[2]
@@ -193,9 +194,9 @@ for idx in range(len(pieceinfo_list)):
     plt.tick_params(left="off",bottom="off",labelleft="off",labelbottom="off")
     
     
-"""
-#%% プロット5 : 形状認識
 
+#%% プロット5 : 形状認識
+"""
 #結果表示
 plt.figure(5)
 for idx in range(len(pieceinfo_list)):
@@ -217,3 +218,4 @@ for idx in range(len(pieceinfo_list)):
     plt.text(size*2-30,size,    p.shapetype.unevens[3],color="m",size=9) #right
     plt.text(size-10,size*2-20, p.shapetype.unevens[2],color="m",size=9) #down
 """    
+
