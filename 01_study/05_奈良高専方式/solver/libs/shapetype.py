@@ -12,36 +12,27 @@ import itertools
 形状種類の情報
 ################
 """
-class ShapeType():
+
+        #形状候補の取得
+        self.candidate  = self._make_candidate()
+
+class ShapeTypes():
     
     
-    
-    def __init__(self, curves_tf):
-        self.curves_tf = curves_tf
-    
-    #%% 辺情報の取得
-    def get_typeinfo(self):
-        """
-        Parameters
-        ----------
-        curves　: 4辺のリスト
-    
-        Returns
-        -------
-        candidate   ：　形状候補(リスト)
-        unevens     ：　4辺の形状判定結果(リスト)
-        shapetype   ：　形状種類の判定結果(整数)        
-        """      
+    def __init__(self, edges):
         #形状候補の取得
         self.candidate  = self._make_candidate()
 
         #4辺の形状判定結果
-        self.unevens=[]
-        for curve_tf in self.curves_tf:
-            self.unevens.append(self._get_uneven(curve_tf, 10))
+        c0    =  Uneven(self.candidate, edges.edges[0])
+        c1    =  Uneven(self.candidate, edges.edges[1])
+        c2    =  Uneven(self.candidate, edges.edges[2])
+        c3    =  Uneven(self.candidate, edges.edges[3])              
+
+        #4辺の初期状態取得
+        self.unevens = {"up":c0,"left":c1,"down":c2,"right":c3}
         
-        #形状種類の判定結果
-        self.shapetype = self._check_shapetype(self.unevens)
+        self.shapetype = self._check_shapetype()      
 
     #%% 形状候補の生成
     def _make_candidate(self):
@@ -51,20 +42,34 @@ class ShapeType():
         res　: 全てのstraight,convex,concaveのパターンを作成
 
         """
-        
-        seq = ["straight","convex","concave"]
-        candidate_all=[]
-        candidate=[]
+        #回転
+        def rot(data):
+            res = data.copy()
+            res["up"]    = data["left"]
+            res["left"]  = data["down"]        
+            res["down"]  = data["right"]        
+            res["right"] = data["up"]   
+            return res
         
         #全リストの生成
-        for i in itertools.product(seq,repeat=4):
-            candidate_all.append(list(i))
+        seq = ["straight","convex","concave"]
+        keys = ["up","left","down","right"]
+        candidate_all=[]
+        for value in itertools.product(seq,repeat=4):
+            dic = dict(zip(keys, value))
+            candidate_all.append(dic)
         
         #回転して重複したものを除去
-        for idx,i in enumerate(candidate_all):
+        candidate=[]
+        for cand in enumerate(candidate_all):
             for j in range(4):
-                #並べ替えデータ
-                tmp = i[:-1]
+                #回転
+                key = rot(cand)
+                #
+                if key in candidate_all
+                
+                
+                
                 tmp.insert(0,i[-1])
                 #あるかのチェック
                 if tmp in candidate_all[:idx]:
@@ -74,38 +79,8 @@ class ShapeType():
     
         return candidate
 
-
-    #%%凹凸情報の取得
-    def _get_uneven(self,data,thresh=50):
-        """
-        Parameters
-        ----------
-        data : カーブ
-        thresh　：　直線と認識する閾値
-        
-        Returns
-        -------
-        res　: 判定結果 (直線：straight、凸：convex、凹：concave)
-               
-        """
-        y = data[:,1]
-        
-        y_abs = np.abs(y)
-        idx   = np.argmax(y_abs)
-        
-        height = y[idx]
-        
-        #分類わけ
-        if max(y_abs) < thresh: #高さが5以下なら直線
-            uneven = "straight"
-        elif height > 0:
-            uneven = "convex"
-        else:
-            uneven = "concave"
-        return uneven
-
     #%%形状タイプのチェック
-    def _check_shapetype(self,unevens):
+    def _check_shapetype(self):
         """
         Parameters
         ----------
@@ -116,10 +91,18 @@ class ShapeType():
         res　: パターン判定結果のインデックス
 
         """
+        for j in range(4):
+            #回転
+            self._turn_cw()
+            #一致するものがあれば、そのインデックス
+
         for idx,i in enumerate(self.candidate):
-            tmp = unevens.copy()
-            for j in range(4):
-                #候補の並べ替え
+                            
+                #回転
+                self.edges._turn_cw()
+
+                #一致するものがあれば、そのインデックス
+                 
                 tmp1 = tmp[:-1]
                 tmp1.insert(0,tmp[-1])
                 tmp = tmp1
@@ -128,4 +111,13 @@ class ShapeType():
                     #print(tmp1)
                     return idx
                     break
+                
+
+
+
+
+
+
+
+
 

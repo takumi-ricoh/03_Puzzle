@@ -11,92 +11,31 @@ import cv2
 
 """
 ################
-各辺の情報
+4辺の情報
 ################
 """
-class Edge():
-    
-    #スプライン補間パラメータ
-    BSPLINE_POINTS = 1000 #補間後の点数
-    
+
+#%4辺の情報
+class Edges():
+
     def __init__(self,contour_np, corner_idx):
         self.contour_np = contour_np
         self.corner_idx = corner_idx
 
-    #%% 辺情報の取得
-    def get_edgeinfo(self):
-        """
-        Parameters
-        ----------
-        contour_np　: 輪郭のnumpy配列[x,y]
-        corner_idx　：　4つ角のインデックスのリスト
-    
-        Returns
-        -------
-        curves      ：　切り出した4辺(リスト)
-        curves_tf   ：　各4辺に座標変換を施したもの(リスト)
-        curves_sp   ：　各4辺にスプライン処理を施したもの(リスト)
-        curves_csum ：　各4辺の累積距離(リスト)
-        straight_lens : 直線距離
-        curve_lens   : 曲線距離
-        curves_img   : エッジを画像化したもの
-        
-        """       
-        
-        #4辺の取得
-        self.curves  = self._split_contour(self.contour_np, self.corner_idx)
+        #4辺の生座標
+        splited  = self._split_contour(self.contour_np, self.corner_idx)
 
-        #スプライン処理の実施
-        self.curves_sp    = []
-        self.curves_tf    = []
-        self.curves_csum  = []
-        self.lens_straight = []
-        self.lens_curve = []
-        self.lens_total = []
-        self.curves_img = []
-        self.curves_img2 = []
-        self.curves_img_dil = []
-        
-        #1辺ごとに処理 →　リスト保存
-        for idx,curve in enumerate(self.curves):
-            self.curve_sp       = curve.copy()#self._bspline(curve, Edge.BSPLINE_K, Edge.BSPLINE_NUM, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
-#            self.curve_sp       = self._bspline(curve, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
-            self.curve_tf       = self._tf(self.curve_sp)        #座標変換(配列)           
-            self.curve_csum     = self._curve_sum(self.curve_tf) #累積長さ(配列)
-            self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
-            self.len_curve      = max(self.curve_csum)            #曲線距離(スカラー)
-            self.len_total      = self.len_straight + self.len_curve
-            self.curve_img      = self._toImg(self.curve_tf)
-            self.curve_img2      = self._toImg2(self.curve_tf)
-            self.curve_img_dil  = self._dilation(self.curve_img2)
-            
-            self.curves_sp.append(self.curve_sp)
-            self.curves_tf.append(self.curve_tf)
-            self.curves_csum.append(self.curve_csum) 
-            self.lens_straight.append(self.len_straight)
-            self.lens_curve.append(self.len_curve)
-            self.lens_total.append(self.len_total)
-            self.curves_img.append(self.curve_img)
-            self.curves_img2.append(self.curve_img2)
-            self.curves_img_dil.append(self.curve_img_dil)
-        
+        #4辺の取得
+        c0    =  Edge(splited[0])
+        c1    =  Edge(splited[1])
+        c2    =  Edge(splited[2])
+        c3    =  Edge(splited[3])        
+
+        #4辺の初期状態取得
+        self.edges = {"up":c0,"left":c1,"down":c2,"right":c3}
+
     #%% 輪郭を4つに切り出す
     def _split_contour(self,contour_np, corner_idx):
-        """
-        Parameters
-        ----------
-        contour_np　: 輪郭のnumpy配列[x,y]
-        corner_idx　：　4つ角のインデックスのリスト
-    
-        Returns
-        -------
-        res　：　4辺の曲線のリスト(座標変換済み)
-        
-        Notes
-        -------
-        輪郭を切り出す。このとき元の輪郭の始点と終点をつなげる処理も行う。
-        座標変換する。
-        """       
             
         idx = corner_idx
         contour = contour_np
@@ -113,7 +52,62 @@ class Edge():
         curves  = [c1, c2, c3, c4]    
         
         return curves 
+
+    #%% 回転する
+    def _turn_cw(self):
+        tmp = self.edges.copy()
+        
+        self.edges["up"]    = tmp["left"]
+        self.edges["left"]  = tmp["down"]        
+        self.edges["down"]  = tmp["right"]        
+        self.edges["right"] = tmp["up"]        
+
+    def _turn_ccw(self):
+        tmp = self.edges.copy()
+        
+        self.edges["up"]    = tmp["right"]
+        self.edges["left"]  = tmp["up"]        
+        self.edges["down"]  = tmp["left"]        
+        self.edges["right"] = tmp["down"]        
+
+
+
+
+
+
+
+
+#%% 1辺の情報
+        
+"""
+################
+各辺の情報
+################
+"""        
+        
+class Edge():
     
+    #スプライン補間パラメータ
+    BSPLINE_POINTS = 1000 #補間後の点数
+    
+    def __init__(self,curve):
+        self.curve = curve
+        self._pipeline()
+
+    #%% 計算パイプライン
+    def _pipeline(self):
+
+        self.curve_sp       = self.curve.copy()#self._bspline(curve, Edge.BSPLINE_K, Edge.BSPLINE_NUM, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
+#            self.curve_sp       = self._bspline(curve, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
+        self.curve_tf       = self._tf(self.curve_sp)        #座標変換(配列)           
+        self.curve_csum     = self._curve_sum(self.curve_tf) #累積長さ(配列)
+        self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
+        self.len_curve      = max(self.curve_csum)            #曲線距離(スカラー)
+        self.len_total      = self.len_straight + self.len_curve
+        self.curve_img      = self._toImg(self.curve_tf)
+        self.curve_img2      = self._toImg2(self.curve_tf)
+        self.curve_img_dil  = self._dilation(self.curve_img2)
+        
     #%% 座標変換
     def _tf(self,data):
         """        
@@ -275,3 +269,46 @@ class Edge():
         dilated = cv2.dilate(img,kernel,iterations = 1)
 
         return dilated
+
+
+"""
+################
+1ピースの事前処理
+################
+"""
+#%%
+class Uneven():
+
+    def __init__(self, candidate,edge):
+
+        #4辺の形状判定結果
+        self.uneven     = self._get_uneven(edge)
+    
+    #凹凸情報の取得
+    def _get_uneven(self,data,thresh=50):
+        """
+        Parameters
+        ----------
+        data : カーブ
+        thresh　：　直線と認識する閾値
+        
+        Returns
+        -------
+        res　: 判定結果 (直線：straight、凸：convex、凹：concave)
+               
+        """
+        y = data[:,1]
+        
+        y_abs = np.abs(y)
+        idx   = np.argmax(y_abs)
+        
+        height = y[idx]
+        
+        #分類わけ
+        if max(y_abs) < thresh: #高さが5以下なら直線
+            uneven = "straight"
+        elif height > 0:
+            uneven = "convex"
+        else:
+            uneven = "concave"
+        return uneven

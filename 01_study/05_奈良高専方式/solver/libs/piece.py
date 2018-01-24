@@ -64,11 +64,9 @@ class Piece():
 
         #各辺の情報取得
         self.edges = edge.Edge(self.contour_sp, self.corner_idx)
-        self.edges.get_edgeinfo()
 
         #形状種類の取得
-        self.shapetype = shapetype.ShapeType(self.edges.curves_tf)
-        self.shapetype.get_typeinfo()
+        self.shapetype = shapetype.ShapeType(self.edges)
         
 
     #%% 2値化
@@ -232,6 +230,12 @@ class Piece():
         corner = contour_np[corner_idx,:]
         
         return corner_idx, corner
+
+
+class dict2(dict):
+    def __init__(self):
+        super().__init__(self)
+
 
 #%% 黒ブロブの処理(白ブロブを継承してつかう)
 """
