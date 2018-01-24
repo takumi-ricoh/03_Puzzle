@@ -19,20 +19,18 @@ import cv2
 class Edges():
 
     def __init__(self,contour_np, corner_idx):
-        self.contour_np = contour_np
-        self.corner_idx = corner_idx
 
         #4辺の生座標
-        splited  = self._split_contour(self.contour_np, self.corner_idx)
+        splited  = self._split_contour(contour_np, corner_idx)
 
-        #4辺の取得
-        c0    =  Edge(splited[0])
-        c1    =  Edge(splited[1])
-        c2    =  Edge(splited[2])
-        c3    =  Edge(splited[3])        
+        #4辺の初期値
+        self.up       =  Edge(splited[0])
+        self.left     =  Edge(splited[1])
+        self.down     =  Edge(splited[2])
+        self.right    =  Edge(splited[3])        
 
-        #4辺の初期状態取得
-        self.edges = {"up":c0,"left":c1,"down":c2,"right":c3}
+        #回転回数の初期値
+        self.k = 0
 
     #%% 輪郭を4つに切り出す
     def _split_contour(self,contour_np, corner_idx):
@@ -53,29 +51,19 @@ class Edges():
         
         return curves 
 
-    #%% 回転する
-    def _turn_cw(self):
-        tmp = self.edges.copy()
-        
-        self.edges["up"]    = tmp["left"]
-        self.edges["left"]  = tmp["down"]        
-        self.edges["down"]  = tmp["right"]        
-        self.edges["right"] = tmp["up"]        
-
-    def _turn_ccw(self):
-        tmp = self.edges.copy()
-        
-        self.edges["up"]    = tmp["right"]
-        self.edges["left"]  = tmp["up"]        
-        self.edges["down"]  = tmp["left"]        
-        self.edges["right"] = tmp["down"]        
-
-
-
-
-
-
-
+    #%%  時計方向にn回回転する
+    def _turn_cw(self,n):
+        self.k += n
+        for i in range(n):
+            up      = self.up
+            left    = self.left
+            down    = self.down
+            right   = self.right
+            
+            self.up = left
+            self.left = down
+            self.down = right
+            self.right = up        
 
 #%% 1辺の情報
         
@@ -99,14 +87,15 @@ class Edge():
 
         self.curve_sp       = self.curve.copy()#self._bspline(curve, Edge.BSPLINE_K, Edge.BSPLINE_NUM, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
 #            self.curve_sp       = self._bspline(curve, Edge.BSPLINE_POINTS)    #スプライン変換(配列)
-        self.curve_tf       = self._tf(self.curve_sp)        #座標変換(配列)           
+        self.curve_tf       = self._tf(self.curve_sp)        #座標変換(配列) 
+        self.uneven         = self._get_uneven(self.curve_tf)          
         self.curve_csum     = self._curve_sum(self.curve_tf) #累積長さ(配列)
         self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
         self.len_curve      = max(self.curve_csum)            #曲線距離(スカラー)
-        self.len_total      = self.len_straight + self.len_curve
         self.curve_img      = self._toImg(self.curve_tf)
-        self.curve_img2      = self._toImg2(self.curve_tf)
+        self.curve_img2     = self._toImg2(self.curve_tf)
         self.curve_img_dil  = self._dilation(self.curve_img2)
+
         
     #%% 座標変換
     def _tf(self,data):
@@ -270,22 +259,8 @@ class Edge():
 
         return dilated
 
-
-"""
-################
-1ピースの事前処理
-################
-"""
-#%%
-class Uneven():
-
-    def __init__(self, candidate,edge):
-
-        #4辺の形状判定結果
-        self.uneven     = self._get_uneven(edge)
-    
-    #凹凸情報の取得
-    def _get_uneven(self,data,thresh=50):
+    #%%凹凸情報の取得
+    def _get_uneven(self,data,thresh=30):
         """
         Parameters
         ----------

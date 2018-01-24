@@ -51,23 +51,28 @@ class Piece():
         self.binary_img0 = self._get_binaryimg(self.img)
         self.img_size = self.binary_img0.shape
         
+        #モルフォロジー変換によるデノイズ
         self.binary_img = self._calc_morphology(self.binary_img0)
         
         #輪郭データ
         self.contour_np = self._detect_contour(self.binary_img)
 
-        #スプライン補間
+        #スプライン補間によるデノイズ
         self.contour_sp = self._bspline(self.contour_np, Piece.BSPLINE_POINTS)
         
         #4箇所の角のデータ
         self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)
 
         #各辺の情報取得
-        self.edges = edge.Edge(self.contour_sp, self.corner_idx)
+        self.edges = edge.Edges(self.contour_sp, self.corner_idx)
 
         #形状種類の取得
-        self.shapetype = shapetype.ShapeType(self.edges)
-        
+        s=shapetype.ShapeType(self.edges)
+        self.shapetype = s.shapetype
+
+    #%% ピースの回転
+    def rot_cw(self,n):
+        self.edges._turn_cw(n)        
 
     #%% 2値化
     def _get_binaryimg(self,img):

@@ -38,8 +38,9 @@ for idx,img in enumerate(img_list):
     p = piece.Piece(img)
     p.get_pieceinfo()
     pieceinfo_list.append(p)     
+  
 
-    
+"""    
 #ソルバー （違う輪郭同士の比較に対応で　引数2つ)
 solve  = solver.PuzzleSolver(pieceinfo_list, pieceinfo_list)
 solved = solve.match_res_p
@@ -122,7 +123,7 @@ for idx in range(len(pieceinfo_list)):
     #抜ける
     if idx == IMGN1*IMGN2 - 1:
         break
-"""
+
 #%% プロット3 : マッチング時のスコア表示(どこか1辺基準)
 
 data = solve.all_scores[2]
@@ -156,7 +157,7 @@ for idx in range(len(pieceinfo_list)):
     #抜ける
     if idx == IMGN1*IMGN2 - 1:
         break
-"""
+
 #%% プロット4 : 最適な位置
 
 plt.figure(4)
@@ -181,6 +182,7 @@ for idx in range(len(pieceinfo_list)):
     plt.subplot(IMGN1,IMGN2,i)
     #元の画像
     plt.imshow(p.binary_img)
+   
     #ピース番号
     plt.title(idx)
     #テキスト
@@ -196,7 +198,7 @@ for idx in range(len(pieceinfo_list)):
     
 
 #%% プロット5 : 形状認識
-"""
+
 #結果表示
 plt.figure(5)
 for idx in range(len(pieceinfo_list)):
