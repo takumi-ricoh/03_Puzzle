@@ -25,9 +25,9 @@ class ShapeType():
         right = edges.right.uneven
         down  = edges.down.uneven
 
-        unevens = [left, up, right, down]
+        self.unevens = [left, up, right, down]
         
-        self.shapetype = self._check_shapetype(unevens)
+        self.shapetype = self._check_shapetype(self.unevens)
 
     #%% 形状候補の生成
     def _make_candidate(self):
@@ -56,7 +56,7 @@ class ShapeType():
 
     #%%形状タイプのチェック
     def _check_shapetype(self, unevens):
-        res = 100000
+        res = None
         
         for j in range(4):
             #回転
