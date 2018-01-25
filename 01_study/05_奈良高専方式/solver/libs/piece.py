@@ -8,6 +8,7 @@ Created on Wed Dec 27 16:17:43 2017
 import numpy as np
 from scipy import interpolate
 import cv2
+from PIL import Image as im
 import edge
 import shapetype
 import importlib
@@ -22,12 +23,18 @@ importlib.reload(edge)
 
 class Piece():
     
+    #ピースの識別番号
+    val = 0
+    
     #スプライン補間パラメータ
     BSPLINE_POINTS = 4000 #補間後の点数
     
     def __init__(self,img):
         self.img = img[40:-40,130:-130]
-        
+
+        #呼ばれた回数だけ識別番号を割り当て       
+        self.val = Piece.val
+        Piece.val += 1 
         
     #%% ピース計算
     def get_pieceinfo(self):
@@ -46,7 +53,6 @@ class Piece():
         edges       : 各辺のオブジェクト
         
         """       
-
         #2値化データ
         self.binary_img0 = self._get_binaryimg(self.img)
         self.img_size = self.binary_img0.shape
@@ -61,7 +67,7 @@ class Piece():
         self.contour_sp = self._bspline(self.contour_np, Piece.BSPLINE_POINTS)
         
         #4箇所の角のデータ
-        self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)
+        self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)   
 
         #各辺の情報取得
         self.edges = edge.Edges(self.contour_sp, self.corner_idx)
@@ -70,9 +76,20 @@ class Piece():
         s=shapetype.ShapeType(self.edges)
         self.shapetype = s.shapetype
 
-    #%% ピースの回転
+    #%% ピースのエッジの回転
     def rot_cw(self,n):
         self.edges._turn_cw(n)        
+
+        self.img        = self._rot_pil(self.img)
+        self.binary_img = self._rot_pil(self.binary_img)
+
+    #%% 画像の回転
+    def _rot_img(self,img,n):
+        pil_img = im.fromarray(self.img)
+        pil_img = pil_img.rotate(-90*n)
+        npimg   = np.array(pil_img)
+        
+        return npimg
 
     #%% 2値化
     def _get_binaryimg(self,img):
