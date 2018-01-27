@@ -80,8 +80,10 @@ class Piece():
     def rot_cw(self,n):
         self.edges._turn_cw(n)        
 
-        self.img        = self._rot_pil(self.img)
-        self.binary_img = self._rot_pil(self.binary_img)
+    #%% 回転(実際に回転)
+    def rot_data(self,n):
+        self.img        = self._rot_img(self.img,n)
+        self.get_pieceinfo()
 
     #%% 画像の回転
     def _rot_img(self,img,n):
