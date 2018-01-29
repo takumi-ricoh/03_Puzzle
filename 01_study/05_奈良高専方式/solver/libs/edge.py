@@ -27,7 +27,13 @@ class Edges():
         self.up       =  Edge(splited[0])
         self.left     =  Edge(splited[1])
         self.down     =  Edge(splited[2])
-        self.right    =  Edge(splited[3])        
+        self.right    =  Edge(splited[3])      
+        
+        #初期状態
+        self.up_def    = self.up
+        self.left_def  = self.up
+        self.down_def  = self.up
+        self.right_def = self.up
 
         #回転回数の初期値
         self.k = 0
@@ -53,7 +59,9 @@ class Edges():
 
     #%%  時計方向にn回回転する
     def _turn_cw(self,n):
-        self.k += n
+
+        self.k = (self.k + n)%4
+
         for i in range(n):
             up      = self.up
             left    = self.left
@@ -64,6 +72,14 @@ class Edges():
             self.left = down
             self.down = right
             self.right = up        
+
+    #%%  時計方向にn回回転する
+    def _turn_reset(self):
+        self.k = 0
+        self.up = self.up_def
+        self.down = self.down_def
+        self.left = self.left_def
+        self.right = self.right_def        
 
 #%% 1辺の情報
         
