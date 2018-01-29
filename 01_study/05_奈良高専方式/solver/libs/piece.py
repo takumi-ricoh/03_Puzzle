@@ -254,11 +254,6 @@ class Piece():
         return corner_idx, corner
 
 
-class dict2(dict):
-    def __init__(self):
-        super().__init__(self)
-
-
 #%% 黒ブロブの処理(白ブロブを継承してつかう)
 """
 ################
