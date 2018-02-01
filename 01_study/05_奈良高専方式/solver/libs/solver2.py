@@ -14,11 +14,20 @@ class PuzzleSolver():
     
     def __init__(self,pieceinfo_list):
         self.pieceinfo_list = pieceinfo_list
+
+        self.result = np.empty((4,6))
+        
+        self._set_corner()
         
         
-    def set_corner(self):
-        pass
+    def _set_corner(self):
+        #shpaetypeが4のピースのみ抽出
+        self.tmp = [i for i in self.pieceinfo_list if i.shapetype == 5]
         
+        #shpaetypeが4のピースのみ抽出
+
+
+
         
     #%%すべての辺の組み合わせを確認し保存する
     def _get_all_matches(self, piecelist1, piecelist2):

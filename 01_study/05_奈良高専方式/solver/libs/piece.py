@@ -13,7 +13,8 @@ import edge
 import shapetype
 import importlib
 importlib.reload(edge)
-importlib.reload(edge)
+importlib.reload(shapetype)
+
 
 """
 ################
@@ -73,8 +74,8 @@ class Piece():
         self.edges = edge.Edges(self.contour_sp, self.corner_idx)
 
         #形状種類の取得
-        s=shapetype.ShapeType(self.edges)
-        self.shapetype = s.shapetype
+        self._s=shapetype.ShapeType(self.edges)
+        self.shapetype = self._s.shapetype
 
     #%% ピースのエッジの回転
     def rot_cw(self,n):

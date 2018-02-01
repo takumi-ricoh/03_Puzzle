@@ -27,7 +27,7 @@ class ShapeType():
 
         self.unevens = [left, up, right, down]
         
-        self.shapetype = self._check_shapetype(self.unevens)
+        self.shapetype = self._check_shapetype(self.unevens.copy())
 
     #%% 形状候補の生成
     def _make_candidate(self):
@@ -40,11 +40,11 @@ class ShapeType():
         
         #回転して重複したものを除去
         candidate=[]
-        for cand in enumerate(candidate_all):
+        for cand in candidate_all:
             #4回回す
             for j in range(4):
                 #回転する
-                cand = cand[-1:] + cand[:-1]
+                cand = list(cand[-1:] + cand[:-1])
                 #もしすでに候補にあればやめる
                 if cand in candidate:
                     break
