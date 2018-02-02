@@ -8,6 +8,33 @@ Created on Sun Jan 28 01:33:12 2018
 import numpy as np
 import cv2
 import itertools
+import timeit
+
+#@jit
+def loop(slist,list1,list2,list3):
+    res = []
+    for type5 in list1:
+        for type11 in list2:
+            for type15 in list3:                
+                #1つの並びを完成させるループ
+                tmp = []
+                count5=0
+                count11=0
+                count15=0
+                for idx,shape in enumerate(slist):
+                    if shape == 5:
+                        tmp.append(type5[count5])
+                        count5 += 1 
+                    elif shape == 11:
+                        tmp.append(type11[count11])
+                        count11 += 1
+                    elif shape == 15:
+                        tmp.append(type15[count15])
+                        count15 += 1
+                res.append(tmp)
+    return res
+    
+
 
 class PuzzleSolver():
 
@@ -19,29 +46,27 @@ class PuzzleSolver():
         self.slist=[5, 15,  11,  15,  11,  5, 15,  11,  5, 15,  11,  15,  11,  5, 15,  11]
         self.ulist=[0, "d", "d", "d", "d", 0, "r", "r", 0, "u", "u", "u", "u", 0, "l", "l"]
         
-        self.cand_list =  self._get_cand()
+        self.cand_list =  timeit.timeit(self._get_cand())
     
-                    
+
     def _get_cand(self):
         #shpaetypeが4のピースのみ抽出
-        self.type5  = [i for i in self.pieceinfo_list if i.shapetype == 5]
-        self.type11 = [i for i in self.pieceinfo_list if i.shapetype == 11]
-        self.type15 = [i for i in self.pieceinfo_list if i.shapetype == 15]
-
-        self.type5var  = [i.var for i in self.pieceinfo_list if i.shapetype == 5]
-        self.type11var = [i.var for i in self.pieceinfo_list if i.shapetype == 11]
-        self.type15var = [i.var for i in self.pieceinfo_list if i.shapetype == 15]
-
-        self.type5type  = [i.shapetype for i in self.pieceinfo_list if i.shapetype == 5]
-        self.type11type = [i.shapetype for i in self.pieceinfo_list if i.shapetype == 11]
-        self.type15type = [i.shapetype for i in self.pieceinfo_list if i.shapetype == 15]
+        self.type5  = [i.var for i in self.pieceinfo_list if i.shapetype == 5]
+        self.type11 = [i.var for i in self.pieceinfo_list if i.shapetype == 11]
+        self.type15 = [i.var for i in self.pieceinfo_list if i.shapetype == 15]
+        #順列
+        self.perm_type5  = list(itertools.permutations(self.type5))
+        self.perm_type11 = list(itertools.permutations(self.type11))        
+        self.perm_type15 = list(itertools.permutations(self.type15))
         
-        res=[]
-        for idx,i in enumerate(self.typeallvar):
-            if list(self.typealltype[idx]) == self.slist[idx]:
-                var  = self.typeallvar[idx]
-                data = [i for i in self.pieceinfo_list if i.var == var] 
-                res.append(data[0])
+        res = print(timeit.timeit(loop(self.slist, self.perm_type5, self.perm_type11, self.perm_type15)))
+        
+#        res=[]
+#        for idx,i in enumerate(self.typeallvar):
+#            if list(self.typealltype[idx]) == self.slist[idx]:
+#                var  = self.typeallvar[idx]
+#                data = [i for i in self.pieceinfo_list if i.var == var] 
+#                res.append(data[0])
         
         return res
 

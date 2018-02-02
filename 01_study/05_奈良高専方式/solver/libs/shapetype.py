@@ -61,7 +61,8 @@ class ShapeType():
         for j in range(4):
             #回転
             unevens = unevens[-1:] + unevens[:-1]
-            #該当パターンのインデックスを返            if unevens in self.candidate:
+            #該当パターンのインデックスを返            
+            if unevens in self.candidate:
                 res = self.candidate.index(unevens)
                 break
         
