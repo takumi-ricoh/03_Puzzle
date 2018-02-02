@@ -59,7 +59,7 @@ solved = solve.match_res_p
 plt.figure(1)
 for p in pieceinfo_list:
     #インデックス
-    idx = p.val
+    idx = p.var
     #サブプロット
     i = idx//4 + ((idx+4)%4)*6 + 1    
     plt.subplot(IMGN1,IMGN2,i)
@@ -92,7 +92,7 @@ for p in pieceinfo_list:
 plt.figure(2)
 for p in pieceinfo_list:
     
-    idx=p.val
+    idx=p.var
     
     #print(idx)
     #サブプロット
@@ -197,7 +197,7 @@ for idx in range(len(pieceinfo_list)):
 plt.figure(5)
 for p in pieceinfo_list:
     
-    idx = p.val
+    idx = p.var
     
     #print(idx)
     #サブプロット

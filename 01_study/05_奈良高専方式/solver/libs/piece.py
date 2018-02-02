@@ -25,7 +25,7 @@ importlib.reload(shapetype)
 class Piece():
     
     #ピースの識別番号
-    val = 0
+    var = 0
     
     #スプライン補間パラメータ
     BSPLINE_POINTS = 4000 #補間後の点数
@@ -34,8 +34,8 @@ class Piece():
         self.img = img[40:-40,130:-130]
 
         #呼ばれた回数だけ識別番号を割り当て       
-        self.val = Piece.val
-        Piece.val += 1 
+        self.var = Piece.var
+        Piece.var += 1 
         
     #%% ピース計算
     def get_pieceinfo(self):
