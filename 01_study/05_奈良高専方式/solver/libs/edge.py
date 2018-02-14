@@ -38,6 +38,13 @@ class Edges():
         #回転回数の初期値
         self.k = 0
 
+        #セット入手
+        self.get_set()
+
+    #%% 輪郭情報のセット入手
+    def get_set(self):
+        self.edges = {"up":self.up, "left":self.up, "down":self.down, "right":self.down}
+
     #%% 輪郭を4つに切り出す
     def _split_contour(self,contour_np, corner_idx):
             
@@ -108,10 +115,11 @@ class Edge():
         self.curve_csum     = self._curve_sum(self.curve_tf) #累積長さ(配列)
         self.len_straight   = max(self.curve_tf[:,0])         #直線距離(スカラー)
         self.len_curve      = max(self.curve_csum)            #曲線距離(スカラー)
-        self.curve_img      = self._toImg(self.curve_tf)
-        self.curve_img2     = self._toImg2(self.curve_tf)
-        self.curve_img_dil  = self._dilation(self.curve_img2)
+        self.curve_img      = self._toImg(self.curve_tf)      #drqwContours関数による画像化
+        self.curve_img2     = self._toImg2(self.curve_tf)     #地道に画像化
+        self.curve_img_dil  = self._dilation(self.curve_img2) #太らせたもの
 
+        self.fPoint_kp, self.fPoint_des      = self.calc_fPoint(self.curve_img2,"AKAZE")
         
     #%% 座標変換
     def _tf(self,data):
@@ -303,3 +311,11 @@ class Edge():
         else:
             uneven = "concave"
         return uneven
+
+
+    #%%AKAZE特徴量の計算
+    def calc_fPoint(self,img,detector):
+        if detector == "AKAZE":
+            detector = cv2.AKAZE_create()
+        kp, des = detector.detectAndCompute(img,None)
+        return kp,des

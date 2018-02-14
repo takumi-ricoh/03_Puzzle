@@ -11,46 +11,51 @@ class PuzzleSolver():
 
     MATCHSHAPE_ALGO = 1
     
-    def __init__(self,pieceinfo_list1,pieceinfo_list2):
+    def __init__(self,pieceinfo_list):
         #初期化
-        self.plist1   = pieceinfo_list1
-        self.plist2 = pieceinfo_list2
+        self.plist   = pieceinfo_list
         #すべての組み合わせスコア計算
-        self.all_matches = self._get_all_matches(self.plist1, self.plist2)
+        self.all_matches = self._get_all_matches(self.plist)
         #基準1辺ごとに最適な辺を選択
         self.match_res  = self._get_best_matches(self.all_matches) 
         #4辺ずつ、サブリストに分割
         self.match_res_p = [self.match_res[x:x+4] for x in range(0, len(self.match_res), 4)]
 
     #%%すべての辺の組み合わせを確認し保存する
-    def _get_all_matches(self, piecelist1, piecelist2):
+    def _get_all_matches(self, piecelist):
         res=[]#結果
         tmp=[]        
         #基準のピース/辺のループ
-        for idx1, piece1 in enumerate(piecelist1):
-            for i in range(4):
+        for piece1 in piecelist:
+            for key1,val1 in piece1.edges.items():
+                uneven1 = val1.uneven
+                img1 =  val1.curve_img2
+                des1 = val1.fPoint_des
            
                 #比較するピース/辺のループ
-                for idx2,piece2 in enumerate(piecelist2):
-                    for j in range(4):
+                for piece2 in piecelist:
+                    for key2,val2 in piece1.edges.items():
+                        uneven2 = val2.uneven
+                        img2 =  val2.curve_img2
+                        des2 = val2.fPoint_des
                         
                         #形状による絞り込みフラグ
-                        match_type = self._get_shapetype_match(piece1,idx1,i,piece2,idx2,j)
+                        match_type = self._get_shapetype_match(piece1,uneven1, piece2,uneven2)
                         
-                        #いろいろなスコア
-                        score1 = self._calc_MatchShapes_score(piece1,i,piece2,j,0)
-                        score2 = self._calc_MatchShapes_score(piece1,i,piece2,j,1)
-                        score3 = self._calc_MatchTemplate_score(piece1,i,piece2,j)                        
-                        score4 = self._calc_lengthS_score(piece1,i,piece2,j)
-                        score5 = self._calc_lengthC_score(piece1,i,piece2,j)                        
-                        
-                        tmp.append([idx1,i,idx2,j,match_type,score1,score2,score3,score4,score5])
+                        #MatchShapes関数によるスコア
+                        score1 = self._calc_MatchShapes_score(img1,img2)
+                        #Match関数によるスコア
+                        score2 = self._calc_MatchTemplate_score(img1,img2)                        
+                        #特徴量関数によるスコア
+                        score3 = self._calc_MatchFeature_score(des1,des2)                       
+
+                                   
+                        tmp.append([piece1.var, key1, piece2.var, key2, match_type, score1, score2, score3])
  
                 #基準とする1辺ごとに、96個の確認結果をnp.arrayとし、それをリスト保存する
                 res.append(np.array(tmp))
                 tmp=[]
         return res
-
 
     #%%各辺の最適な組み合わせを確認し保存する
     def _get_best_matches(self,all_matches):
@@ -59,27 +64,8 @@ class PuzzleSolver():
             #形状が該当するもののみ抽出
             type_bool = match[:,4]==1
             tmp1 = match[type_bool,:]
-
-            #絞り込み
-#            if 10 < int(len(tmp)):
-#                num1 = 10
-#            else:
-#                num1 = int(len(tmp)/2)
-#            
-#            idx1=np.argsort(tmp[:,5]) #6列目でソート
-#            tmp1=tmp[idx1,:][1:num1]
             
-            
-#            #曲線による絞り込み
-#            if 3 < int(len(tmp1)):
-#                num2 = 3
-#            else:
-#                num2= int(len(tmp1)/2)
-#                
-#            idx2=np.argsort(tmp1[:,7]) #7列目でソート
-#            tmp2=tmp1[idx2,:][1:num2]            
-            
-            #MatchShapesによる選択            
+            #最大のものを選択           
             idx = np.argmax(tmp1[:,7])
 
             #該当行を抽出
@@ -87,18 +73,17 @@ class PuzzleSolver():
 
             #リスト保存
             res.append(best)        
+            
         return res
-        
 
     #%%エッジ種類によるマッチング                    
-    def _get_shapetype_match(self,piece1,idx1,i,piece2,idx2,j):
+    def _get_shapetype_match(self,piece1,uneven1,piece2,uneven2):
         #比較する形状
-        ref_type = piece1.shapetype.shapetype
-        obj_type = piece2.shapetype.shapetype
-        ref_unevens = piece1.shapetype.unevens[i]
-        obj_unevens = piece2.shapetype.unevens[j]
-
-        search_word = [ref_type, ref_unevens, obj_type, obj_unevens]
+        ref_type = piece1.shapetype
+        obj_type = piece2.shapetype
+        ref_uneven = uneven1
+        obj_uneven = uneven2
+        search_word = [ref_type, ref_uneven, obj_type, obj_uneven]
         
         candidate = [
                      #4 vs 16
@@ -124,7 +109,7 @@ class PuzzleSolver():
                      [31,"convex",31,"concave"],]
 
         #自分自身とはNG
-        if idx1 == idx2:
+        if piece1.var == piece2.var:
             match = False
 
         #候補があればOK
@@ -132,7 +117,7 @@ class PuzzleSolver():
             match = True
 
         #直線ならOK            
-        elif ref_unevens=="straight":
+        elif ref_uneven=="straight":
             match = True
             
         #他の組み合わせはない    
@@ -142,15 +127,10 @@ class PuzzleSolver():
         return match
 
     #%%MatchShapes関数によるマッチング
-    def _calc_MatchShapes_score(self,piece1,i,piece2,j,mode=0):
+    def _calc_MatchShapes_score(self,img1,img2):
         
-        if mode==0:
-            ref = piece1.edges.curves_img2[i]
-            obj = piece2.edges.curves_img2[j]
-
-        else:
-            ref = piece1.edges.curves_img_dil[i]
-            obj = piece2.edges.curves_img_dil[j]
+        ref = img1
+        obj = img2
         
         algo = PuzzleSolver.MATCHSHAPE_ALGO
 
@@ -159,10 +139,10 @@ class PuzzleSolver():
         return score
 
     #%%MatchSTemplate関数によるマッチング
-    def _calc_MatchTemplate_score(self,piece1,i,piece2,j):
+    def _calc_MatchTemplate_score(self,img1,img2):
         
-        ref = piece1.edges.curves_img_dil[i]
-        obj = piece2.edges.curves_img_dil[j]
+        ref = img1
+        obj = img2
         
         #objの画像サイズ拡大
         base =np.zeros([500,500])
@@ -177,6 +157,21 @@ class PuzzleSolver():
         
         return score
     
+    #%%MatchFeature関数によるマッチング
+    def _calc_MatchFeature_score(self,des1,des2):
+        
+        #Brute=Force matcher
+        bfm = cv2.BFMatcher(cv2.NORM_HAMMING)
+        
+        #マッチしたポイントのリスト
+        match = bfm.match(des1,des2)
+        
+        #特徴点の距離の平均
+        dist = [m.distance for m in match]
+        score = sum(dist)/len(dist)
+
+        return score
+
     #%%直線距離による比較
     def _calc_lengthS_score(self,piece1,i,piece2,j):
         ref = piece1.edges.lens_straight[i]

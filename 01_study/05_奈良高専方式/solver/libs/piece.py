@@ -71,23 +71,25 @@ class Piece():
         self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)   
 
         #各辺の情報取得
-        self.edges = edge.Edges(self.contour_sp, self.corner_idx)
+        self._e = edge.Edges(self.contour_sp, self.corner_idx)
+        self.edges = self._e.edges
 
         #形状種類の取得
-        self._s=shapetype.ShapeType(self.edges)
+        self._s=shapetype.ShapeType(self._e)
         self.shapetype = self._s.shapetype
 
     #%% ピースのエッジの回転
     def rot_cw(self,n):
-        self.edges._turn_cw(n)        
+        self._e._turn_cw(n)        
 
-    #%% 回転(実際に回転)
-    def rot_data(self,n):
-        self.img        = self._rot_img(self.img,n)
+
+    #%% 回転(実際に回転して再計算)
+    def __rot_data(self,n):
+        self.img = self.__rot_img(self.img,n)
         self.get_pieceinfo()
 
     #%% 画像の回転
-    def _rot_img(self,img,n):
+    def __rot_img(self,img,n):
         pil_img = im.fromarray(self.img)
         pil_img = pil_img.rotate(-90*n)
         npimg   = np.array(pil_img)

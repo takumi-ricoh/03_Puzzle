@@ -6,14 +6,14 @@ Created on Fri Dec 29 23:28:56 2017
 """
 import glob
 import piece
-import solver2
+import solver
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
 import importlib
 importlib.reload(piece)
-importlib.reload(solver2)
+importlib.reload(solver)
 
 #プロット色々ためすための、、、
 IMGN1 = 4 #サブプロット縦　個数
@@ -40,7 +40,7 @@ for idx,img in enumerate(img_list):
     pieceinfo_list.append(p)     
   
 
-solve  = solver2.PuzzleSolver(pieceinfo_list)
+solve  = solver.PuzzleSolver(pieceinfo_list)
 
 """    
 #ソルバー （違う輪郭同士の比較に対応で　引数2つ)
