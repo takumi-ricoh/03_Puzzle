@@ -42,18 +42,17 @@ for idx,img in enumerate(img_list):
 
 solve  = solver.PuzzleSolver(pieceinfo_list)
 
-"""    
-#ソルバー （違う輪郭同士の比較に対応で　引数2つ)
 
+#ソルバー （違う輪郭同士の比較に対応で　引数2つ)
 solved = solve.match_res_p
-"""
+
 """""""""""""""""""""""""""
 
 ### 以下評価用のプロット ###
 
 """""""""""""""""""""""""""
 
-
+"""
 #%% プロット1 : 輪郭/形状種類の確認
 
 plt.figure(1)
@@ -117,7 +116,7 @@ for p in pieceinfo_list:
     #抜ける
     if idx == IMGN1*IMGN2 - 1:
         break
-"""
+
 #%% プロット3 : マッチング時のスコア表示(どこか1辺基準)
 
 data = solve.all_scores[2]
@@ -151,7 +150,7 @@ for idx in range(len(pieceinfo_list)):
     #抜ける
     if idx == IMGN1*IMGN2 - 1:
         break
-
+"""
 #%% プロット4 : 最適な位置
 
 plt.figure(4)
@@ -164,6 +163,7 @@ for idx in range(len(pieceinfo_list)):
     w0=solved[idx][0]
     w1=solved[idx][1]
     w2=solved[idx][2]
+#    
     w3=solved[idx][3]
     v2k = {0:"up",1:"left",2:"down",3:"right"}
     ww0 = str(w0[2]) + " - " + str(v2k[w0[3]])    
@@ -218,3 +218,4 @@ for p in pieceinfo_list:
     
     plt.title(p.shapetype)
 
+"""

@@ -16,10 +16,10 @@ class PuzzleSolver():
         self.plist   = pieceinfo_list
         #すべての組み合わせスコア計算
         self.all_matches = self._get_all_matches(self.plist)
-        #基準1辺ごとに最適な辺を選択
-        self.match_res  = self._get_best_matches(self.all_matches) 
-        #4辺ずつ、サブリストに分割
-        self.match_res_p = [self.match_res[x:x+4] for x in range(0, len(self.match_res), 4)]
+#        #基準1辺ごとに最適な辺を選択
+#        self.match_res  = self._get_best_matches(self.all_matches) 
+#        #4辺ずつ、サブリストに分割
+#        self.match_res_p = [self.match_res[x:x+4] for x in range(0, len(self.match_res), 4)]
 
     #%%すべての辺の組み合わせを確認し保存する
     def _get_all_matches(self, piecelist):
@@ -34,7 +34,7 @@ class PuzzleSolver():
            
                 #比較するピース/辺のループ
                 for piece2 in piecelist:
-                    for key2,val2 in piece1.edges.items():
+                    for key2,val2 in piece2.edges.items():
                         uneven2 = val2.uneven
                         img2 =  val2.curve_img2
                         des2 = val2.fPoint_des
@@ -46,11 +46,15 @@ class PuzzleSolver():
                         score1 = self._calc_MatchShapes_score(img1,img2)
                         #Match関数によるスコア
                         score2 = self._calc_MatchTemplate_score(img1,img2)                        
+                        
                         #特徴量関数によるスコア
-                        score3 = self._calc_MatchFeature_score(des1,des2)                       
-
+                        if (uneven1=="straight")or(uneven2=="straight"):
+                            score3=0
+                        else:
+                            score3 = self._calc_MatchFeature_score(des1,des2)                       
+                        print(piece1.var,key1,piece2.var,key2,score3)
                                    
-                        tmp.append([piece1.var, key1, piece2.var, key2, match_type, score1, score2, score3])
+                        tmp.append([piece1.var, key1, uneven1,piece2.var, key2,uneven2, match_type, score1, score2, score3])
  
                 #基準とする1辺ごとに、96個の確認結果をnp.arrayとし、それをリスト保存する
                 res.append(np.array(tmp))
@@ -87,26 +91,26 @@ class PuzzleSolver():
         
         candidate = [
                      #4 vs 16
-                     [4,"convex",16,"concave"],
-                     [16,"concave",4,"convex"],                     
+                     [5,"convex",15,"concave"],
+                     [15,"concave",5,"convex"],                     
                      #4 vs 11
-                     [4,"concave",11,"convex"],
-                     [11,"convex",4,"concave"],
+                     [5,"concave",11,"convex"],
+                     [11,"convex",5,"concave"],
                      #11 vs 16
-                     [11,"concave",16,"convex"],
-                     [16,"convex",11,"concave"],
+                     [11,"concave",15,"convex"],
+                     [15,"convex",11,"concave"],
                      #16 vs 11
-                     [16,"concave",11,"convex"],
-                     [11,"convex",16,"concave"],
+                     [15,"concave",11,"convex"],
+                     [11,"convex",15,"concave"],
                      #16 vs 31
-                     [16,"convex",31,"concave"],
-                     [31,"concave",16,"convex"],  
+                     [15,"convex",21,"concave"],
+                     [21,"concave",15,"convex"],  
                      #11 vs 31
-                     [11,"concave",31,"convex"],
-                     [31,"convex",11,"concave"],
+                     [11,"concave",21,"convex"],
+                     [21,"convex",11,"concave"],
                      #31 vs 31
-                     [31,"concave",31,"convex"],
-                     [31,"convex",31,"concave"],]
+                     [21,"concave",21,"convex"],
+                     [21,"convex",21,"concave"],]
 
         #自分自身とはNG
         if piece1.var == piece2.var:
@@ -157,7 +161,7 @@ class PuzzleSolver():
         
         return score
     
-    #%%MatchFeature関数によるマッチング
+    #%%BGMatcher関数によるマッチング
     def _calc_MatchFeature_score(self,des1,des2):
         
         #Brute=Force matcher

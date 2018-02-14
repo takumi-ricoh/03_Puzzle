@@ -43,7 +43,7 @@ class Edges():
 
     #%% 輪郭情報のセット入手
     def get_set(self):
-        self.edges = {"up":self.up, "left":self.up, "down":self.down, "right":self.down}
+        self.edges = {"up":self.up, "left":self.left, "down":self.down, "right":self.right}
 
     #%% 輪郭を4つに切り出す
     def _split_contour(self,contour_np, corner_idx):
@@ -119,7 +119,7 @@ class Edge():
         self.curve_img2     = self._toImg2(self.curve_tf)     #地道に画像化
         self.curve_img_dil  = self._dilation(self.curve_img2) #太らせたもの
 
-        self.fPoint_kp, self.fPoint_des      = self.calc_fPoint(self.curve_img2,"AKAZE")
+        self.fPoint_kp, self.fPoint_des      = self.calc_fPoint(self.curve_img2)
         
     #%% 座標変換
     def _tf(self,data):
@@ -314,8 +314,9 @@ class Edge():
 
 
     #%%AKAZE特徴量の計算
-    def calc_fPoint(self,img,detector):
-        if detector == "AKAZE":
-            detector = cv2.AKAZE_create()
+    def calc_fPoint(self, img):
+
+        detector = cv2.AKAZE_create()
         kp, des = detector.detectAndCompute(img,None)
+
         return kp,des
