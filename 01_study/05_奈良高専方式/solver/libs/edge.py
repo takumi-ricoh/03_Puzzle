@@ -31,9 +31,9 @@ class Edges():
         
         #初期状態
         self.up_def    = self.up
-        self.left_def  = self.up
-        self.down_def  = self.up
-        self.right_def = self.up
+        self.left_def  = self.left
+        self.down_def  = self.down
+        self.right_def = self.right
 
         #回転回数の初期値
         self.k = 0
@@ -44,6 +44,7 @@ class Edges():
     #%% 輪郭情報のセット入手
     def get_set(self):
         self.edges = {"up":self.up, "left":self.left, "down":self.down, "right":self.right}
+        self.edgesNgb = {"up":self.right, "left":self.up, "down":self.left, "right":self.down} #時計方向の隣接
 
     #%% 輪郭を4つに切り出す
     def _split_contour(self,contour_np, corner_idx):
@@ -119,7 +120,9 @@ class Edge():
         self.curve_img2     = self._toImg2(self.curve_tf)     #地道に画像化
         self.curve_img_dil  = self._dilation(self.curve_img2) #太らせたもの
 
-        self.fPoint_kp, self.fPoint_des      = self.calc_fPoint(self.curve_img2)
+        self.akaze_kp, self.akaze_des      = self.calc_fPoint(self.curve_img,"akaze")
+        self.orb_kp, self.orb_des          = self.calc_fPoint(self.curve_img,"orb")
+        #self.sift_kp, self.sift_des        = self.calc_fPoint(self.curve_img,"sift")
         
     #%% 座標変換
     def _tf(self,data):
@@ -314,9 +317,14 @@ class Edge():
 
 
     #%%AKAZE特徴量の計算
-    def calc_fPoint(self, img):
+    def calc_fPoint(self, img, algo):
 
-        detector = cv2.AKAZE_create()
+        if algo == "akaze": 
+            detector = cv2.AKAZE_create()
+        elif  algo == "orb":
+            detector = cv2.ORB_create()
+        elif algo == "sift":
+            detector = cv2.xfeatures2d.SIFT_create()
         kp, des = detector.detectAndCompute(img,None)
 
         return kp,des

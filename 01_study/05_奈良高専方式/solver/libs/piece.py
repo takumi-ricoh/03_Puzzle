@@ -73,6 +73,7 @@ class Piece():
         #各辺の情報取得
         self._e = edge.Edges(self.contour_sp, self.corner_idx)
         self.edges = self._e.edges
+        self.edgesNgb = self._e.edgesNgb
 
         #形状種類の取得
         self._s=shapetype.ShapeType(self._e)

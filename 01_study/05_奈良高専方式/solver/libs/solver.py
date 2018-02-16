@@ -30,17 +30,23 @@ class PuzzleSolver():
             for key1,val1 in piece1.edges.items():
                 uneven1 = val1.uneven
                 img1 =  val1.curve_img2
-                des1 = val1.fPoint_des
+                akaze1 = val1.akaze_des
+                orb1 = val1.orb_des
+                #sift1 = val1.sift_des
+                ngb1 = piece1.edgesNgb[key1].uneven#時計方向隣の形状
            
                 #比較するピース/辺のループ
                 for piece2 in piecelist:
                     for key2,val2 in piece2.edges.items():
                         uneven2 = val2.uneven
                         img2 =  val2.curve_img2
-                        des2 = val2.fPoint_des
+                        akaze2 = val2.akaze_des
+                        orb2   = val2.orb_des
+                        #sift2  = val2.sift_des
+                        ngb2   = piece2.edgesNgb[key2].uneven#時計回りとなりの形状
                         
                         #形状による絞り込みフラグ
-                        match_type = self._get_shapetype_match(piece1,uneven1, piece2,uneven2)
+                        match_type = self._get_shapetype_match(piece1,uneven1, piece2,uneven2,ngb1,ngb2)
                         
                         #MatchShapes関数によるスコア
                         score1 = self._calc_MatchShapes_score(img1,img2)
@@ -50,11 +56,16 @@ class PuzzleSolver():
                         #特徴量関数によるスコア
                         if (uneven1=="straight")or(uneven2=="straight"):
                             score3=0
+                            score4=0
+                            #score5=0
                         else:
-                            score3 = self._calc_MatchFeature_score(des1,des2)                       
+                            score3 = self._calc_MatchFeature_score(akaze1,akaze2)                       
+                            score4 = self._calc_MatchFeature_score(orb1,orb2)
+                            #score5 = self._calc_MatchFeature_score(sift1,sift2)
                         print(piece1.var,key1,piece2.var,key2,score3)
                                    
-                        tmp.append([piece1.var, key1, uneven1,piece2.var, key2,uneven2, match_type, score1, score2, score3])
+                        tmp.append([piece1.var, key1, uneven1,piece2.var, key2,uneven2, match_type,\
+                                    score1, score2, score3, score4,])
  
                 #基準とする1辺ごとに、96個の確認結果をnp.arrayとし、それをリスト保存する
                 res.append(np.array(tmp))
@@ -81,36 +92,40 @@ class PuzzleSolver():
         return res
 
     #%%エッジ種類によるマッチング                    
-    def _get_shapetype_match(self,piece1,uneven1,piece2,uneven2):
+    def _get_shapetype_match(self,piece1,uneven1,piece2,uneven2,ngb1,ngb2):
         #比較する形状
         ref_type = piece1.shapetype
         obj_type = piece2.shapetype
         ref_uneven = uneven1
         obj_uneven = uneven2
-        search_word = [ref_type, ref_uneven, obj_type, obj_uneven]
+        obj_ngb = ngb2
+        search_word = [ref_type, ref_uneven, obj_type, obj_uneven, obj_ngb]
         
         candidate = [
                      #4 vs 16
-                     [5,"convex",15,"concave"],
-                     [15,"concave",5,"convex"],                     
+                     [5,"convex",15,"concave","convex"],
+                     [15,"concave",5,"convex","straight"],                     
                      #4 vs 11
-                     [5,"concave",11,"convex"],
-                     [11,"convex",5,"concave"],
-                     #11 vs 16
-                     [11,"concave",15,"convex"],
-                     [15,"convex",11,"concave"],
+                     [5,"concave",11,"convex","straight"],
+                     [11,"convex",5,"concave","convex"],
                      #16 vs 11
-                     [15,"concave",11,"convex"],
-                     [11,"convex",15,"concave"],
-                     #16 vs 31
-                     [15,"convex",21,"concave"],
-                     [21,"concave",15,"convex"],  
+                     [15,"concave",11,"convex","concave"],
+                     [11,"convex",15,"concave","straight"],
+                     #16 vs 11
+                     [15,"concave",11,"convex","straight"],
+                     [11,"convex",15,"concave","convex"],
+
+                     #15 vs 21
+                     [15,"convex",21,"concave","convex"],
+                     [21,"concave",15,"convex","concave"], 
+                     
                      #11 vs 31
-                     [11,"concave",21,"convex"],
-                     [21,"convex",11,"concave"],
+                     [11,"concave",21,"convex","concave"],
+                     [21,"convex",11,"concave","convex"],
+                     
                      #31 vs 31
-                     [21,"concave",21,"convex"],
-                     [21,"convex",21,"concave"],]
+                     [21,"concave",21,"convex","concave"],
+                     [21,"convex",21,"concave","convex"],]
 
         #自分自身とはNG
         if piece1.var == piece2.var:
