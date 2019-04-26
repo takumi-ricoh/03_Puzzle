@@ -49,7 +49,7 @@ class Piece():
         self.contour_np = self._detect_contour(self.binary_img)
 
         #スプライン補間
-        self.contour_sp = self._bspline(self.contour_np,3,1)
+        self.contour_sp = self._bspline(self.contour_np,1,1)
         
         #4箇所の角のデータ
         self.corner_idx, self.corner = self._detect_4corner(self.contour_sp, self.img_size, margin=20)
@@ -149,8 +149,12 @@ class Piece():
         """
     
         #輪郭画素抽出
-        _, contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)#CHAIN_APPROX_NONE 
+        _, contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE )
         contour = contours[0][:,0,:]
+        #cv2.CHAIN_APPROX_SIMPLE
+        #cv2.CHAIN_APPROX_NONE 
+        #cv2.CHAIN_APPROX_TC89_L1
+        #cv2.CHAIN_APPROX_TC89_KCOS
         
         #numpy 配列
         contour_np = np.array(contour)

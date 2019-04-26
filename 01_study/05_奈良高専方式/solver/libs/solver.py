@@ -17,7 +17,7 @@ class PuzzleSolver():
         #基準1辺ごとに最適な辺を選択
         self.match_res  = self._get_best_matches(self.all_scores) 
         #4辺ずつ、サブリストに分割
-        self.match_res_p = zip(*[iter(self.match_res)]*4)
+        self.match_res_p = [self.match_res[x:x+4] for x in range(0, len(self.match_res), 4)]
 
     #%%すべての辺の組み合わせを確認し保存する
     def _get_all_matches(self,piecelist):
@@ -32,10 +32,11 @@ class PuzzleSolver():
                     for j in range(4):
                         
                         #一つ一つ確認
-                        match1 = self._get_shapetype_match(piece1,i,piece2,j)
+                        match1 = self._get_edgetype_match(piece1,i,piece2,j)
+                        match2 = self._get_shapetype_match(piece1,piece2)
                         score1 = self._get_MatchShapes_match(piece1,i,piece2,j)
                         
-                        tmp.append([idx1,i,idx2,j,match1,score1])
+                        tmp.append([idx1,i,idx2,j,match1,score1,match2])
  
                 #基準とする1辺ごとに、96個の確認結果をnp.arrayとし、それをリスト保存する
                 res.append(np.array(tmp))
@@ -48,7 +49,10 @@ class PuzzleSolver():
         res= []
         for score in all_scores:
             #形状が該当するもののみ抽出
-            tmp = score[score[:,4]==True]
+            bool1 = score[:,4]==1
+            bool2 = score[:,6]==1
+            bool_total = [min(t) for t in zip(bool1, bool2)]
+            tmp = score[bool_total]
             #この中でスコア最小となるインデックス    
             idx = np.argmin(tmp[:,5])
             #該当行を抽出
@@ -58,8 +62,8 @@ class PuzzleSolver():
         return res
         
 
-    #%%形状種類によるマッチング                    
-    def _get_shapetype_match(self,piece1,i,piece2,j):
+    #%%エッジ種類によるマッチング                    
+    def _get_edgetype_match(self,piece1,i,piece2,j):
         #比較する形状
         ref_type = piece1.shapetype.unevens[i]
         obj_type = piece2.shapetype.unevens[j]
@@ -79,11 +83,33 @@ class PuzzleSolver():
 
         return match
 
+    #%%形状種類によるマッチング(直線を含むか)                   
+    def _get_shapetype_match(self,piece1,piece2):
+        #比較する形状
+        ref_type = piece1.shapetype.shapetype
+        obj_type = piece2.shapetype.shapetype
+
+        #同一形状を除去
+        if ref_type == obj_type:
+            match = False
+         
+        #4と31の組み合わせ除去
+        elif (ref_type==4) and (obj_type==31):
+            match = False
+
+        elif (ref_type==31) and (obj_type==4):
+            match = False
+            
+        else:
+            match = True
+
+        return match
+
 
     #%%MatchShapes関数によるマッチング
     def _get_MatchShapes_match(self,piece1,i,piece2,j):
         ref = piece1.edges.curves_img[i]
         obj = piece2.edges.curves_img[j]
-        score = cv2.matchShapes(ref, obj, 3, 0.0)
+        score = cv2.matchShapes(ref, obj, 1, 0.0)
         
         return score
