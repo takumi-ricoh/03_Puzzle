@@ -17,16 +17,20 @@ y = points[:,1]
 t = range(len(points))
 ipl_t = np.linspace(0.0, len(points) - 1, 100)
 
-x_tup = si.splrep(t, x, k=2)
-y_tup = si.splrep(t, y, k=2)
+x_tup = si.splrep(t, x, k=2,s=0)
+y_tup = si.splrep(t, y, k=2,s=0)
 
 x_list = list(x_tup)
-xl = x.tolist()
-x_list[1] = xl + [0.0, 0.0, 0.0, 0.0]
+xl = x.tolist() 
+xl_addn = len(x_list) - len(xl)
+x_list[1] = xl + [0]*xl_addn
+#x_list[1] = xl + [0.0, 0.0, 0.0, 0.0]
 
 y_list = list(y_tup)
 yl = y.tolist()
-y_list[1] = yl + [0.0, 0.0, 0.0, 0.0]
+yl_addn = len(y_list) - len(yl)
+y_list[1] = yl + [0]*yl_addn
+#y_list[1] = yl + [0.0, 0.0, 0.0, 0.0]
 
 x_i = si.splev(ipl_t, x_list)
 y_i = si.splev(ipl_t, y_list)
